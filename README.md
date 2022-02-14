@@ -1,4 +1,4 @@
-You need CMake Tools installed.
+You need VSCode CMake Tools extension installed.
 
 I built and installed Ogre with vcpkg.
 

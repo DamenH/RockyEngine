@@ -10,7 +10,7 @@ cd vcpkg
 ./vcpkg install ogre
 ```
 
-This didn't actually install vcpkg globally, but it built Ogre, and that's all I care about.
+This did not actually install vcpkg globally, but it built Ogre, and that's all I care about.
 
 The `c_cpp_properties.json` in `.vscode` directory is pretty specific, so if you have any problems, check there first.
 

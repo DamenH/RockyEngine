@@ -1,26 +1,21 @@
-// This file is part of the OGRE project.
-// It is subject to the license terms in the LICENSE file found in the top-level directory
-// of this distribution and at https://www.ogre3d.org/licensing.
-// SPDX-License-Identifier: MIT
-
 #include "Ogre.h"
 #include "OgreApplicationContext.h"
 
-class MyTestApp : public OgreBites::ApplicationContext, public OgreBites::InputListener
+class Application : public OgreBites::ApplicationContext, public OgreBites::InputListener
 {
 public:
-	MyTestApp();
+	Application();
 	void setup();
 	bool keyPressed(const OgreBites::KeyboardEvent &evt);
 
 	Ogre::SceneNode *camNode;
 };
 
-MyTestApp::MyTestApp() : OgreBites::ApplicationContext("Bootstrap Ogre")
+Application::Application() : OgreBites::ApplicationContext("Bootstrap Ogre")
 {
 }
 
-bool MyTestApp::keyPressed(const OgreBites::KeyboardEvent &evt)
+bool Application::keyPressed(const OgreBites::KeyboardEvent &evt)
 {
 	if (evt.keysym.sym == OgreBites::SDLK_ESCAPE)
 	{
@@ -29,7 +24,7 @@ bool MyTestApp::keyPressed(const OgreBites::KeyboardEvent &evt)
 	return true;
 }
 
-void MyTestApp::setup(void)
+void Application::setup(void)
 {
 	// do not forget to call the base first
 	OgreBites::ApplicationContext::setup();
@@ -69,23 +64,4 @@ void MyTestApp::setup(void)
 	Ogre::Entity *ent = scnMgr->createEntity("Sinbad.mesh");
 	Ogre::SceneNode *node = scnMgr->getRootSceneNode()->createChildSceneNode();
 	node->attachObject(ent);
-}
-
-int main(int argc, char *argv[])
-{
-	MyTestApp app;
-	app.initApp();
-
-	double z_position = 15;
-
-	while (true)
-	{
-		z_position += 0.01;
-		app.camNode->setPosition(0, 0, z_position);
-		app.getRoot()->renderOneFrame();
-	}
-
-	app.closeApp();
-
-	return 0;
 }

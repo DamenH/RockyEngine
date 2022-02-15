@@ -96,7 +96,7 @@ material Sinbad/Eyes
 		{
 			ambient 0.75 0.75 0.75
 			diffuse 1 1 1 1
-			specular 0.75 0.75 0.75 55.5
+			specular 0.25 0.25 0.25 10.5
 			
 			texture_unit
 			{

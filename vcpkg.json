@@ -4,7 +4,6 @@
     "dependencies": [
         "sdl2",
         "entt",
-        "ogre",
         "bullet3",
 		"boost",
 		"imgui",

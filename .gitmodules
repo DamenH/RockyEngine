@@ -1,3 +1,6 @@
 [submodule "vcpkg"]
 	path = vcpkg
 	url = https://github.com/microsoft/vcpkg
+[submodule "src/Engine/Ogre"]
+	path = src/Engine/Ogre
+	url = https://github.com/OGRECave/ogre

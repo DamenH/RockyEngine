@@ -1,9 +1,9 @@
 #include <iostream>
-#include "Application.cpp"
+#include "Engine/Core/Application.cpp"
 
 int main(int argc, char *argv[])
 {
-	std::cout << "Starting Game Engine!" << std::endl;
+	std::cout << "Starting Game!" << std::endl;
 
 	Application app;
 	app.initApp();

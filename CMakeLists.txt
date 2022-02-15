@@ -6,10 +6,10 @@ if(COMMAND cmake_policy)
 	cmake_policy(SET CMP0003 NEW)
 endif(COMMAND cmake_policy)
 
-include_directories(src/Engine/Core)
+include_directories(src)
 
 # add the source files as usual
-add_executable(GameEngine src/Engine/Core/EntryPoint.cpp)
+add_executable(Game src/Game/EntryPoint.cpp)
  
 # this also sets the includes and pulls third party dependencies
-target_link_libraries(GameEngine OgreBites)
+target_link_libraries(Game OgreBites)

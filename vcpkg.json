@@ -1,0 +1,14 @@
+{
+    "name": "rockyengine",
+    "version-string": "0.1.0",
+    "dependencies": [
+        "sdl2",
+        "entt",
+        "ogre",
+        "bullet3",
+		"boost",
+		"imgui",
+		"openexr",
+		"pugixml"
+    ]
+}

@@ -2,7 +2,7 @@
     "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
 	"C_Cpp.default.includePath": [
 		"/usr/local/include/**",
-		"${workspaceFolder}/src"
+		"${workspaceFolder}/src",
 	],
 	"files.associations": {
 		"*.tcc": "cpp",
@@ -33,5 +33,8 @@
 		"type_traits": "cpp",
 		"typeinfo": "cpp",
 		"bitset": "cpp"
-	}
+	},
+	"cmake.configureSettings": {
+		"CMAKE_TOOLCHAIN_FILE": "${workspaceFolder}/vcpkg/scripts/buildsystems/vcpkg.cmake"
+	  }
 }

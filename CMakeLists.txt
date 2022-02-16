@@ -21,7 +21,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 find_package(OGRE REQUIRED COMPONENTS Bites CONFIG)
 # Note: 17 target(s) were omitted.
-target_link_libraries(Game PRIVATE OgreMain Codec_EXR OgreBites Codec_STBI)
+target_link_libraries(Game PRIVATE OgreMain OgreBites Codec_STBI)
 
 # find_package(imgui CONFIG REQUIRED)
 # target_link_libraries(Game PRIVATE imgui::imgui)

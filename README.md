@@ -1,50 +1,34 @@
 # Rocky Engine
 
-**Purpose:** A minimalistic cross-platform 3D game engine suitable for rapid prototyping of games with modern graphics, physics, networking, and Data-Oriented-Design
+**Purpose:** A custom cross-platform 3D game engine suitable for rapid prototyping of games with modern graphics, physics, networking, and Data-Oriented-Design
 
 ## Project Setup
 
-1. Update submodules
-
-```
-git submodule update --init --recursive
-```
-
-2. Install dependencies
-
-Initialize vcpkg
-```
-./Rocky/vendor/vcpkg/bootstrap-vcpkg.sh
-```
-
-Install vcpkg depedencies
-```
-../Rocky/vendor/vcpkg/vcpkg install
-```
-Install Ogre
-https://ogrecave.github.io/ogre/api/latest/building-ogre.html
+Run `scripts/setup.sh` to automatically install all dependencies.
 
 ## Dependencies:
 
-| Library | Version | Source | Function |
-|-------- | ------- |------- |--------- |
-| Ogre    | 1.12.9  | vcpkg  | 3D graphics |
-| SDL2 | 2.0.16  | vcpkg  | Windowing, keyboard, and mouse |
-| EnTT    | 3.8.0  | vcpkg  | Entity Component System implementation |
-| Bullet3    | 3.17  | vcpkg  | 3D realtime physics simulation |
-| Boost    | 1.77.0  | vcpkg  | Handy C++ libraries |
-| ImGui    | 1.85  | vcpkg  | Immediate mode GUI |
-| OpenEXR    | 2.5.0 | vcpkg  | HDR image loading |
-| pugixml    | 1.114 | vcpkg  | XML parser |
+| Library | Version | Source | Function                       |
+|-------- | ------- |------- |------------------------------- |
+| Ogre    | 1.13.3  |  git   | 3D graphics                    |
+| SDL2    |         |        | Windowing, keyboard, and mouse |
+| EnTT    |         |        | Entity Component System        |
+| Bullet3 |         |        | 3D realtime physics simulation |
+| Boost   |         |        | Handy C++ libraries            |
+| ImGui   |         |        | Immediate mode GUI             |
 
 
 ## Planned Features
 
-- [ ] PBR graphics
+- [x] PBR graphics
 - [ ] Atmospheric effects
+- [ ] 3D audio with environmental effects
 - [ ] Dynamic map loading for large open worlds
 - [ ] Deterministic physics
 - [ ] Intelligent NPCs
 - [ ] Efficient networking for multiplayer
+- [ ] One-click setup for new game projects
+- [ ] HTML+CSS-based UI system
+- [ ] Live reloading of assets
 
 

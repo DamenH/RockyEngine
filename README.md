@@ -12,9 +12,17 @@ git submodule update --init --recursive
 
 2. Install dependencies
 
+Initialize vcpkg
 ```
-./vcpkg/vcpkg install
+./Rocky/vendor/vcpkg/bootstrap-vcpkg.sh
 ```
+
+Install vcpkg depedencies
+```
+../Rocky/vendor/vcpkg/vcpkg install
+```
+Install Ogre
+https://ogrecave.github.io/ogre/api/latest/building-ogre.html
 
 ## Dependencies:
 

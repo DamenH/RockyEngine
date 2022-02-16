@@ -3,3 +3,5 @@ vcpkg_installed
 
 build/*
 !build/*.cfg
+
+setup

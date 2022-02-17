@@ -9,6 +9,7 @@ public:
 	bool keyPressed(const OgreBites::KeyboardEvent &evt);
 
 	Ogre::SceneNode *camNode;
+	Ogre::SceneNode *modelNode;
 };
 
 Application::Application() : OgreBites::ApplicationContext("Bootstrap Ogre")
@@ -62,6 +63,6 @@ void Application::setup(void)
 
 	// finally something to render
 	Ogre::Entity *ent = scnMgr->createEntity("Sinbad.mesh");
-	Ogre::SceneNode *node = scnMgr->getRootSceneNode()->createChildSceneNode();
-	node->attachObject(ent);
+	modelNode = scnMgr->getRootSceneNode()->createChildSceneNode();
+	modelNode->attachObject(ent);
 }

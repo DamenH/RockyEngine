@@ -8,12 +8,14 @@ int main(int argc, char *argv[])
 	Application app;
 	app.initApp();
 
-	double z_position = 15;
+	app.modelNode->setScale(Ogre::Vector3(5.0, 5.0, 5.0));
 
 	while (true)
 	{
-		z_position += 0.01;
-		app.camNode->setPosition(0, 0, z_position);
+		Ogre::Quaternion orientation = app.modelNode->getOrientation();
+		orientation = orientation * Ogre::Quaternion(Ogre::Radian(0.01), Ogre::Vector3(0.0, 0.0, 1.0));
+		app.modelNode->setOrientation(orientation);
+
 		app.getRoot()->renderOneFrame();
 	}
 

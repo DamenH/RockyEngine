@@ -24,7 +24,7 @@ else
 
   # Install dependencies if is needed
   echo "===[ Checking Dependencies ]==========================================="
-  DEPENDENCIES=(libgles2-mesa-dev libsdl2-dev libxt-dev libxaw7-dev doxygen zziplib-bin cmake-qt-gui libassimp-dev libassimp5 assimp-utils libopenexr25 libopenexr-dev libbullet-dev libbullet-extras-dev libboost-all-dev libimgui-dev openexr cmake)
+  DEPENDENCIES=(libgbm-dev libgles2-mesa-dev libsdl2-dev libxt-dev libxaw7-dev doxygen zziplib-bin cmake-qt-gui libassimp-dev libassimp5 assimp-utils libopenexr25 libopenexr-dev libbullet-dev libbullet-extras-dev libboost-all-dev openexr cmake)
   for i in "${DEPENDENCIES[@]}"; do
     if [ "$(is_package_installed $i)" = "no" ]; then
       echo $i

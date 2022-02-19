@@ -55,6 +55,36 @@ else
   cd ..
   rm -rf ogre
   
+  echo "===[ Ogre Done ]============================================================"
+
+
+  # Set ENTT version
+  ENTT_VERSION_TAG="${ENTT_VERSION_TAG:-v3.9.0}";
+  echo "======================================================================="
+  echo "Building and installing ENTT $ENTT_VERSION_TAG"
+  echo "-----------------------------------------------------------------------"
+
+  echo "===[ Clean ]==========================================================="
+  rm -rf lib
+  mkdir lib
+
+  echo "===[ Cloning ENTT ]===================================================="
+  git clone https://github.com/skypjack/entt.git
+  cd entt
+
+  echo "===[ Checkout $ENTT_VERSION_TAG ]======================================"
+  git checkout $ENTT_VERSION_TAG
+
+  echo "===[ Copy ]============================================================"
+  # Install ENTT
+  cd src
+  cp -r entt ../../lib/
+
+  echo "===[ Clean Up ]========================================================"
+  # Remove ENTT repo
+  cd ../../
+  rm -rf entt
+  
   echo "===[ Done ]============================================================"
 
 fi

@@ -1,6 +1,8 @@
 #include "Ogre.h"
 #include "OgreApplicationContext.h"
 
+#include <entt/entt.hpp>
+
 class Application : public OgreBites::ApplicationContext, public OgreBites::InputListener
 {
 public:

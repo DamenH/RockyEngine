@@ -62,7 +62,18 @@ void Application::setup(void)
 	getRenderWindow()->addViewport(cam);
 
 	// finally something to render
-	Ogre::Entity *ent = scnMgr->createEntity("Sinbad.mesh");
+	Ogre::Entity *ent = scnMgr->createEntity("DamagedHelmet.mesh");
 	modelNode = scnMgr->getRootSceneNode()->createChildSceneNode();
 	modelNode->attachObject(ent);
+
+	unsigned short src, dst;
+	if (!ent->getMesh()->suggestTangentVectorBuildParams(Ogre::VES_TANGENT, src, dst))
+	{
+		// enforce that we have tangent vectors
+		ent->getMesh()->buildTangentVectors(Ogre::VES_TANGENT, src, dst);
+	}
+
+	Ogre::MaterialPtr mat = Ogre::MaterialManager::getSingleton().getByName("DamagedHelmet");
+	//Ogre::GpuProgramParametersSharedPtr mParams = mat->getTechnique(0)->getPass(0)->getFragmentProgramParameters();
+	//mParams->setNamedConstant("u_ScaleIBLAmbient", Ogre::Vector4(Ogre::Real(1)));
 }

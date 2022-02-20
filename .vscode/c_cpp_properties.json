@@ -2,17 +2,17 @@
     "configurations": [
         {
             "name": "Linux",
-            "includePath": [
-                "/usr/local/include/**",
-                "${workspaceFolder}/src/**",
-                "${workspaceFolder}/lib/**"
-            ],
+            // "includePath": [
+            //     "/usr/local/include/**",
+            //     "${workspaceFolder}/src/**",
+            //     "${workspaceFolder}/lib/**"
+            // ],
             "defines": [],
             "cStandard": "c11",
             "cppStandard": "c++20",
             "intelliSenseMode": "linux-gcc-x64",
             "compilerPath": "/bin/x86_64-linux-gnu-gcc-11",
-            // "configurationProvider": "ms-vscode.cmake-tools"
+            "configurationProvider": "ms-vscode.cmake-tools"
         }
     ],
     "version": 4

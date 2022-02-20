@@ -11,7 +11,7 @@ public:
 	Application();
 	void Setup();
 	void Run();
-	void RegisterSystem(SystemBase *system);
+	void RegisterSystem(SystemBase &system);
 
 	Ogre::SceneNode *camNode;
 	Ogre::SceneNode *modelNode;

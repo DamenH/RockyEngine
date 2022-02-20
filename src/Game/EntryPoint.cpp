@@ -2,14 +2,12 @@
 #include "Engine/Core/Application.cpp"
 #include <SDL2/SDL.h>
 
-#include "FreeCameraSystem.h"
-
 int main(int argc, char *argv[])
 {
 	Application app;
 	app.initApp();
 
-	FreeCameraSystem freeCameraSystem;
+	// FreeCameraSystem freeCameraSystem;
 	// app.RegisterSystem(&freeCameraSystem);
 
 	app.Run();

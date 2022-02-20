@@ -1,10 +1,4 @@
 {
-    // "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
-    "C_Cpp.default.includePath": [
-        "/usr/local/include/**",
-        "${workspaceFolder}/src/**",
-        "${workspaceFolder}/lib/**"
-    ],
     "files.associations": {
 		"*.tcc": "cpp",
 		"cctype": "cpp",

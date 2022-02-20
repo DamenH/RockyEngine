@@ -11,7 +11,7 @@ public:
 	Application();
 	void Setup();
 	void Run();
-	void RegisterSystem(SystemBase &system);
+	void RegisterSystem(SystemBase *system);
 
 	Ogre::SceneNode *camNode;
 	Ogre::SceneNode *modelNode;
@@ -23,6 +23,5 @@ private:
 	Ogre::SceneManager *scnMgr;
 	Ogre::RTShader::ShaderGenerator *shadergen;
 
-	SystemBase* systems[128];
-
+	SystemBase *systems[128];
 };

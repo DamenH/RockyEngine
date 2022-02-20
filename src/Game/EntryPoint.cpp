@@ -2,6 +2,8 @@
 #include "Engine/Core/Application.cpp"
 #include <SDL2/SDL.h>
 
+#include "Systems/FreeCameraSystem.h"
+
 int main(int argc, char *argv[])
 {
 	Application app;
@@ -10,7 +12,7 @@ int main(int argc, char *argv[])
 	// FreeCameraSystem freeCameraSystem;
 	// app.RegisterSystem(&freeCameraSystem);
 
-	app.Run();
+	// app.Run();
 
 
 

@@ -73,7 +73,7 @@ void Application::Setup()
 	// mParams->setNamedConstant("u_ScaleIBLAmbient", Ogre::Vector4(Ogre::Real(1)));
 }
 
-void Application::RegisterSystem(SystemBase &system)
+void Application::RegisterSystem(SystemBase *system)
 {
 	// Add system to systems array
 }

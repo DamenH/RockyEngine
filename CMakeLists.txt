@@ -12,9 +12,6 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/lib)
 find_package(Bullet CONFIG REQUIRED)
 target_link_libraries(Game PRIVATE LinearMath Bullet3Common BulletDynamics BulletSoftBody)
 
-find_package(Bullet CONFIG REQUIRED)
-target_link_libraries(Game PRIVATE LinearMath Bullet3Common BulletDynamics BulletSoftBody)
-
 find_package(SDL2 CONFIG REQUIRED)
 target_link_libraries(Game PRIVATE SDL2::SDL2 SDL2::SDL2main SDL2::SDL2-static)
 

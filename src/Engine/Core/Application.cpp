@@ -1,39 +1,32 @@
-#include "Ogre.h"
-#include "OgreApplicationContext.h"
+// #include "Ogre.h"
+// #include "OgreApplicationContext.h"
+// #include <SDL2/SDL.h>
+// #include <entt/entt.hpp>
 
-#include <entt/entt.hpp>
+// #include "SystemBase.h"
 
-class Application : public OgreBites::ApplicationContext, public OgreBites::InputListener
-{
-public:
-	Application();
-	void setup();
-	bool keyPressed(const OgreBites::KeyboardEvent &evt);
+#include "Application.h"
+// class Application : public OgreBites::ApplicationContext
+// {
+// public:
+// 	Application();
+// 	void Setup();
+// 	void Run();
+// 	void RegisterSystem(SystemBase *system);
 
-	Ogre::SceneNode *camNode;
-	Ogre::SceneNode *modelNode;
-};
+// 	Ogre::SceneNode *camNode;
+// 	Ogre::SceneNode *modelNode;
+// 	entt::registry *registry;
+// };
 
 Application::Application() : OgreBites::ApplicationContext("Bootstrap Ogre")
 {
 }
 
-bool Application::keyPressed(const OgreBites::KeyboardEvent &evt)
-{
-	if (evt.keysym.sym == OgreBites::SDLK_ESCAPE)
-	{
-		getRoot()->queueEndRendering();
-	}
-	return true;
-}
-
-void Application::setup(void)
+void Application::Setup()
 {
 	// do not forget to call the base first
 	OgreBites::ApplicationContext::setup();
-
-	// register for input events
-	addInputListener(this);
 
 	// get a pointer to the already created root
 	Ogre::Root *root = getRoot();
@@ -76,6 +69,65 @@ void Application::setup(void)
 	}
 
 	Ogre::MaterialPtr mat = Ogre::MaterialManager::getSingleton().getByName("DamagedHelmet");
-	//Ogre::GpuProgramParametersSharedPtr mParams = mat->getTechnique(0)->getPass(0)->getFragmentProgramParameters();
-	//mParams->setNamedConstant("u_ScaleIBLAmbient", Ogre::Vector4(Ogre::Real(1)));
+	// Ogre::GpuProgramParametersSharedPtr mParams = mat->getTechnique(0)->getPass(0)->getFragmentProgramParameters();
+	// mParams->setNamedConstant("u_ScaleIBLAmbient", Ogre::Vector4(Ogre::Real(1)));
+}
+
+void Application::RegisterSystem(SystemBase *system)
+{
+	// Add system to systems array
+}
+
+void Application::Run()
+{
+	SDL_SetHintWithPriority(SDL_HINT_MOUSE_RELATIVE_MODE_WARP, "1", SDL_HINT_OVERRIDE);
+	SDL_SetRelativeMouseMode(SDL_TRUE);
+
+	// const double CAMERA_ROT_RATE = 0.025;
+
+	const Uint8 *keyStates = SDL_GetKeyboardState(NULL);
+
+	bool quit = false;
+
+	while (!quit)
+	{
+		SDL_PumpEvents();
+
+		if (keyStates[SDL_SCANCODE_ESCAPE])
+		{
+			SDL_SetRelativeMouseMode(SDL_FALSE);
+		}
+
+		if (SDL_GetRelativeMouseMode())
+		{
+			// int32_t MouseDeltaX, MouseDeltaY;
+			// SDL_GetRelativeMouseState(&MouseDeltaX, &MouseDeltaY);
+
+			// Ogre::Quaternion cameraOrientation = this->camNode->getOrientation();
+			// Ogre::Quaternion yaw = Ogre::Quaternion(Ogre::Radian(CAMERA_ROT_RATE), Ogre::Vector3(0, CAMERA_ROT_RATE * -MouseDeltaX, 0.0));
+			// cameraOrientation = yaw * cameraOrientation;
+			// Ogre::Quaternion pitch = Ogre::Quaternion(Ogre::Radian(CAMERA_ROT_RATE), Ogre::Vector3(CAMERA_ROT_RATE * -MouseDeltaY, 0.0, 0.0));
+			// cameraOrientation = cameraOrientation * pitch;
+			// this->camNode->setOrientation(cameraOrientation);
+
+			// Ogre::Vector3 cameraPosition = this->camNode->getPosition();
+			// double translationForward = (!!keyStates[SDL_SCANCODE_D] * 0.1) - (!!keyStates[SDL_SCANCODE_A] * 0.1);
+			// double translationLeft = (!!keyStates[SDL_SCANCODE_S] * 0.1) - (!!keyStates[SDL_SCANCODE_W] * 0.1);
+			// this->camNode->setPosition(Ogre::Vector3(cameraPosition.x + translationForward, 0, cameraPosition.z + translationLeft));
+		}
+
+		SDL_Event event;
+		while (SDL_PollEvent(&event))
+		{
+			switch (event.type)
+			{
+			case SDL_QUIT:
+				quit = true;
+				break;
+			}
+		}
+
+		this->getRoot()->renderOneFrame();
+	}
+	SDL_Quit();
 }

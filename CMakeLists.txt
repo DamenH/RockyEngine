@@ -5,9 +5,11 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
 
 add_executable(Game src/Game/EntryPoint.cpp)
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
+include_directories(src)
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/lib)
+add_library(entt INTERFACE)
+target_include_directories(entt INTERFACE lib)
+target_link_libraries(Game PRIVATE entt)
 
 find_package(Bullet CONFIG REQUIRED)
 target_link_libraries(Game PRIVATE LinearMath Bullet3Common BulletDynamics BulletSoftBody)

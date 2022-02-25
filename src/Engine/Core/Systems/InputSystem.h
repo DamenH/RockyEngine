@@ -1,47 +1,42 @@
-#include <SDL2/SDL.h>
+#pragma once
 
 #include "Engine/Core/SystemBase.h"
 #include "Engine/Core/Components/InputComponent.h"
 
-class InputSystem : SystemBase
-{
-	void OnStartup(entt::registry &registry) override
-	{
-		const Uint8 *keyStates = SDL_GetKeyboardState(NULL);
-		int32_t MouseDeltaX, MouseDeltaY;
-		SDL_GetRelativeMouseState(&MouseDeltaX, &MouseDeltaY);
+#include <SDL2/SDL.h>
+#include <entt/entt.hpp>
+#include <cstdint>
+#include <iostream>
 
-		auto entity = registry.create();
-		registry.emplace<InputComponent>(
-			entity,
-			!!keyStates[SDL_SCANCODE_W],
-			!!keyStates[SDL_SCANCODE_S],
-			!!keyStates[SDL_SCANCODE_A],
-			!!keyStates[SDL_SCANCODE_D],
-			MouseDeltaX,
-			MouseDeltaY);
-	}
+class InputSystem : public SystemBase {
 
-	void OnUpdate(entt::registry &registry) override
-	{
-		const Uint8 *keyStates = SDL_GetKeyboardState(NULL);
-		int32_t MouseDeltaX, MouseDeltaY;
-		SDL_GetRelativeMouseState(&MouseDeltaX, &MouseDeltaY);
+    void OnStartup(entt::registry &registry) override {
+        auto entity = registry.create();
+        registry.emplace<InputComponent>(entity, false, false, false, false, 0, 0);
+    }
 
-		auto inputView = registry.view<InputComponent>();
+    void OnUpdate(entt::registry &registry) override {
+        // Get key states
+        const Uint8 *keyStates = SDL_GetKeyboardState(nullptr);
 
-		auto &input = inputView.get<InputComponent>(inputView[0]);
-		for (auto entity : inputView)
-		{
-			auto &input = inputView.get<InputComponent>(entity);
+        // Get relative mouse deltas
+        int32_t MouseDeltaX, MouseDeltaY;
+        SDL_GetRelativeMouseState(&MouseDeltaX, &MouseDeltaY);
 
-			input.ForwardPressed = !!keyStates[SDL_SCANCODE_W];
-			input.BackPressed = !!keyStates[SDL_SCANCODE_S];
-			input.LeftPressed = !!keyStates[SDL_SCANCODE_A];
-			input.RightPressed = !!keyStates[SDL_SCANCODE_D];
+        // TODO understand why this is called a view and not a filter
+        auto inputView = registry.view<InputComponent>();
 
-			input.MouseDeltaX = MouseDeltaX;
-			input.MouseDeltaY = MouseDeltaY;
-		}
-	}
+        auto &input = inputView.get<InputComponent>(inputView[0]);
+
+        input.ForwardPressed = !!keyStates[SDL_SCANCODE_W];
+        input.BackPressed = !!keyStates[SDL_SCANCODE_S];
+        input.LeftPressed = !!keyStates[SDL_SCANCODE_A];
+        input.RightPressed = !!keyStates[SDL_SCANCODE_D];
+
+        input.MouseDeltaX = MouseDeltaX;
+        input.MouseDeltaY = MouseDeltaY;
+
+    }
 };
+
+

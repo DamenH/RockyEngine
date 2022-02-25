@@ -1,18 +1,14 @@
-cmake_minimum_required(VERSION 3.18)
-project(RockyEngine)
+cmake_minimum_required(VERSION 3.18.4)
+project(Game)
 
-set(CMAKE_VERBOSE_MAKEFILE ON)
+set(CMAKE_CXX_STANDARD 20)
 
-add_executable(Game src/Game/EntryPoint.cpp)
+add_executable(Game main.cpp)
 
-include_directories(src)
-
-add_library(entt INTERFACE)
-target_include_directories(entt INTERFACE lib)
-target_link_libraries(Game PRIVATE entt)
-
-find_package(Bullet CONFIG REQUIRED)
-target_link_libraries(Game PRIVATE LinearMath Bullet3Common BulletDynamics BulletSoftBody)
+target_include_directories(Game
+        PRIVATE
+        "${CMAKE_SOURCE_DIR}/lib"
+        "${CMAKE_SOURCE_DIR}/src")
 
 find_package(SDL2 CONFIG REQUIRED)
 target_link_libraries(Game PRIVATE SDL2::SDL2 SDL2::SDL2main SDL2::SDL2-static)
@@ -20,5 +16,4 @@ target_link_libraries(Game PRIVATE SDL2::SDL2 SDL2::SDL2main SDL2::SDL2-static)
 find_package(OGRE REQUIRED COMPONENTS Bites CONFIG)
 target_link_libraries(Game PRIVATE OgreMain OgreBites Codec_STBI)
 
-# Copy resources.cfg out of media submodule
 add_custom_command(TARGET Game POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/media/build $<TARGET_FILE_DIR:Game>)

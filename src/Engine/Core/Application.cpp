@@ -1,122 +1,128 @@
-#include "Ogre.h"
-#include "OgreApplicationContext.h"
+#include "Application.h"
+#include "Systems/InputSystem.h"
+#include "Systems/TransformSystem.h"
+
+#include "Components/CameraComponent.h"
+#include "Components/NodeComponent.h"
+#include "Components/TranformComponent.h"
+
+#include <Ogre.h>
+#include <OgreApplicationContext.h>
 #include <SDL2/SDL.h>
 #include <entt/entt.hpp>
 
-#include "Application.h"
 
-
-Application::Application() : OgreBites::ApplicationContext("Bootstrap Ogre")
-{
+Application::Application() : OgreBites::ApplicationContext("Bootstrap Ogre") {
 }
 
-void Application::setup()
-{
-	// do not forget to call the base first
-	OgreBites::ApplicationContext::setup();
+void Application::setup() {
+    // do not forget to call the base first
+    OgreBites::ApplicationContext::setup();
 
-	// get a pointer to the already created root
-	root = getRoot();
-	scnMgr = root->createSceneManager();
+    // get a pointer to the already created root
+    root = getRoot();
+    sceneManager = root->createSceneManager();
 
-	// register our scene with the RTSS
-	shadergen = Ogre::RTShader::ShaderGenerator::getSingletonPtr();
-	shadergen->addSceneManager(scnMgr);
+    // register our scene with the RTSS
+    shaderGenerator = Ogre::RTShader::ShaderGenerator::getSingletonPtr();
+    shaderGenerator->addSceneManager(sceneManager);
 
-	// without light we would just get a black screen
-	Ogre::Light *light = scnMgr->createLight("MainLight");
-	Ogre::SceneNode *lightNode = scnMgr->getRootSceneNode()->createChildSceneNode();
-	lightNode->setPosition(0, 10, 15);
-	lightNode->attachObject(light);
+    // without light we would just get a black screen
+    Ogre::Light *light = sceneManager->createLight("MainLight");
+    Ogre::SceneNode *lightNode = sceneManager->getRootSceneNode()->createChildSceneNode();
+    lightNode->setPosition(0, 10, 15);
+    lightNode->attachObject(light);
 
-	// also need to tell where we are
-	camNode = scnMgr->getRootSceneNode()->createChildSceneNode();
-	camNode->setPosition(0, 0, 15);
-	camNode->lookAt(Ogre::Vector3(0, 0, -1), Ogre::Node::TS_PARENT);
+    // also need to tell where we are
+    camNode = sceneManager->getRootSceneNode()->createChildSceneNode();
+//    camNode->setPosition(0, 0, 15);
+    camNode->lookAt(Ogre::Vector3(0, 0, -1), Ogre::Node::TS_PARENT);
 
-	// create the camera
-	Ogre::Camera *cam = scnMgr->createCamera("myCam");
-	cam->setNearClipDistance(5); // specific to this sample
-	cam->setAutoAspectRatio(true);
-	camNode->attachObject(cam);
+    // create the camera
+    Ogre::Camera *cam = sceneManager->createCamera("myCam");
+    cam->setNearClipDistance(5); // specific to this sample
+    cam->setAutoAspectRatio(true);
+    camNode->attachObject(cam);
 
-	// and tell it to render into the main window
-	getRenderWindow()->addViewport(cam);
+    // Create camera entity
+    auto entity = registry.create();
+    registry.emplace<CameraComponent>(entity);
+    registry.emplace<NodeComponent>(entity, camNode);
+    registry.emplace<TransformComponent>(entity, 0, 0, 25, camNode->getOrientation());
 
-	// finally something to render
-	Ogre::Entity *ent = scnMgr->createEntity("DamagedHelmet.mesh");
-	modelNode = scnMgr->getRootSceneNode()->createChildSceneNode();
-	modelNode->attachObject(ent);
+    // and tell it to render into the main window
+    getRenderWindow()->addViewport(cam);
 
-	unsigned short src, dst;
-	if (!ent->getMesh()->suggestTangentVectorBuildParams(Ogre::VES_TANGENT, src, dst))
-	{
-		// enforce that we have tangent vectors
-		ent->getMesh()->buildTangentVectors(Ogre::VES_TANGENT, src, dst);
-	}
+    // finally something to render
+    Ogre::Entity *ent = sceneManager->createEntity("DamagedHelmet.mesh");
+    modelNode = sceneManager->getRootSceneNode()->createChildSceneNode();
+    modelNode->attachObject(ent);
+    modelNode->setScale(Ogre::Vector3(5.0, 5.0, 5.0));
 
-	Ogre::MaterialPtr mat = Ogre::MaterialManager::getSingleton().getByName("DamagedHelmet");
-	// Ogre::GpuProgramParametersSharedPtr mParams = mat->getTechnique(0)->getPass(0)->getFragmentProgramParameters();
-	// mParams->setNamedConstant("u_ScaleIBLAmbient", Ogre::Vector4(Ogre::Real(1)));
+    unsigned short src, dst;
+    if (!ent->getMesh()->suggestTangentVectorBuildParams(Ogre::VES_TANGENT, src, dst)) {
+        // enforce that we have tangent vectors
+        ent->getMesh()->buildTangentVectors(Ogre::VES_TANGENT, src, dst);
+    }
+
+    Ogre::MaterialPtr mat = Ogre::MaterialManager::getSingleton().getByName("DamagedHelmet");
+    // Ogre::GpuProgramParametersSharedPtr mParams = mat->getTechnique(0)->getPass(0)->getFragmentProgramParameters();
+    // mParams->setNamedConstant("u_ScaleIBLAmbient", Ogre::Vector4(Ogre::Real(1)));
 }
 
-// void Application::RegisterSystem(SystemBase *system)
-// {
-// 	// Add system to systems array
-// }
+void Application::RegisterSystem(SystemBase *system) {
+    systems[systemsIndex] = system;
+    systemsIndex++;
+}
 
-void Application::Run()
-{
-	modelNode->setScale(Ogre::Vector3(5.0, 5.0, 5.0));
+void Application::InitializeSystems() {
+    for (uint8_t i = 0; i < systemsIndex; i++) {
+        systems[i]->OnStartup(registry);
+    }
+}
 
-	SDL_SetHintWithPriority(SDL_HINT_MOUSE_RELATIVE_MODE_WARP, "1", SDL_HINT_OVERRIDE);
-	SDL_SetRelativeMouseMode(SDL_TRUE);
+void Application::UpdateSystems() {
+    for (uint8_t i = 0; i < systemsIndex; i++) {
+        systems[i]->OnUpdate(registry);
+    }
+}
 
-	const double CAMERA_ROT_RATE = 0.025;
+void Application::Run() {
 
-	const Uint8 *keyStates = SDL_GetKeyboardState(nullptr);
+    SDL_SetHintWithPriority(SDL_HINT_MOUSE_RELATIVE_MODE_WARP, "1", SDL_HINT_OVERRIDE);
+    SDL_SetRelativeMouseMode(SDL_TRUE);
 
-	bool quit = false;
+    const Uint8 *keyStates = SDL_GetKeyboardState(nullptr);
+    bool quit = false;
 
-	while (!quit)
-	{
-		SDL_PumpEvents();
+    InputSystem inputSystem;
+    TransformSystem transformSystem;
+    RegisterSystem(&inputSystem);
+    RegisterSystem(&transformSystem);
+    InitializeSystems();
 
-		if (keyStates[SDL_SCANCODE_ESCAPE])
-		{
-			SDL_SetRelativeMouseMode(SDL_FALSE);
-		}
 
-		if (SDL_GetRelativeMouseMode())
-		{
-			int32_t MouseDeltaX, MouseDeltaY;
-			SDL_GetRelativeMouseState(&MouseDeltaX, &MouseDeltaY);
+    while (!quit) {
+        SDL_PumpEvents();
 
-			Ogre::Quaternion cameraOrientation = this->camNode->getOrientation();
-			Ogre::Quaternion yaw = Ogre::Quaternion(Ogre::Radian(CAMERA_ROT_RATE), Ogre::Vector3(0, CAMERA_ROT_RATE * -MouseDeltaX, 0.0));
-			cameraOrientation = yaw * cameraOrientation;
-			Ogre::Quaternion pitch = Ogre::Quaternion(Ogre::Radian(CAMERA_ROT_RATE), Ogre::Vector3(CAMERA_ROT_RATE * -MouseDeltaY, 0.0, 0.0));
-			cameraOrientation = cameraOrientation * pitch;
-			this->camNode->setOrientation(cameraOrientation);
+        if (keyStates[SDL_SCANCODE_ESCAPE]) {
+            SDL_SetRelativeMouseMode(SDL_FALSE);
+        }
 
-			Ogre::Vector3 cameraPosition = this->camNode->getPosition();
-			double translationForward = (!!keyStates[SDL_SCANCODE_D] * 0.1) - (!!keyStates[SDL_SCANCODE_A] * 0.1);
-			double translationLeft = (!!keyStates[SDL_SCANCODE_S] * 0.1) - (!!keyStates[SDL_SCANCODE_W] * 0.1);
-			this->camNode->setPosition(Ogre::Vector3(cameraPosition.x + translationForward, 0, cameraPosition.z + translationLeft));
-		}
+        if (SDL_GetRelativeMouseMode()) {
+            UpdateSystems();
+        }
 
-		SDL_Event event;
-		while (SDL_PollEvent(&event))
-		{
-			switch (event.type)
-			{
-			case SDL_QUIT:
-				quit = true;
-				break;
-			}
-		}
+        SDL_Event event;
+        while (SDL_PollEvent(&event)) {
+            switch (event.type) {
+                case SDL_QUIT:
+                    quit = true;
+                    break;
+            }
+        }
 
-		this->getRoot()->renderOneFrame();
-	}
-	SDL_Quit();
+        this->getRoot()->renderOneFrame();
+    }
+    SDL_Quit();
 }

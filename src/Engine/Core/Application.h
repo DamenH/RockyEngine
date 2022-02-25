@@ -1,25 +1,34 @@
-#include "Ogre.h"
-#include "OgreApplicationContext.h"
-#include <entt/entt.hpp>
+#pragma once
 
 #include "SystemBase.h"
 
-class Application : public OgreBites::ApplicationContext
-{
+#include <OgreApplicationContext.h>
+#include <entt/entt.hpp>
+
+
+class Application : public OgreBites::ApplicationContext {
 public:
-	Application();
-	void setup();
-	void Run();
+    Application();
 
-	Ogre::SceneNode *camNode;
-	Ogre::SceneNode *modelNode;
+    void setup() override;
 
-	entt::registry *registry;
+    void RegisterSystem(SystemBase *system);
+    void InitializeSystems();
+    void UpdateSystems();
+
+    void Run();
+
+    Ogre::SceneNode *camNode{};
+    Ogre::SceneNode *modelNode{};
+
+    entt::registry registry;
 
 private:
-	Ogre::Root *root;
-	Ogre::SceneManager *scnMgr;
-	Ogre::RTShader::ShaderGenerator *shadergen;
+    Ogre::Root *root{};
+    Ogre::SceneManager *sceneManager{};
+    Ogre::RTShader::ShaderGenerator *shaderGenerator{};
 
-	// SystemBase *systems[128];
+    SystemBase *systems[128]{};
+    uint8_t systemsIndex = 0;
 };
+

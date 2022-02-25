@@ -1,39 +1,26 @@
-// #include "Ogre.h"
-// #include "OgreApplicationContext.h"
-// #include <SDL2/SDL.h>
-// #include <entt/entt.hpp>
-
-// #include "SystemBase.h"
+#include "Ogre.h"
+#include "OgreApplicationContext.h"
+#include <SDL2/SDL.h>
+#include <entt/entt.hpp>
 
 #include "Application.h"
-// class Application : public OgreBites::ApplicationContext
-// {
-// public:
-// 	Application();
-// 	void Setup();
-// 	void Run();
-// 	void RegisterSystem(SystemBase *system);
 
-// 	Ogre::SceneNode *camNode;
-// 	Ogre::SceneNode *modelNode;
-// 	entt::registry *registry;
-// };
 
 Application::Application() : OgreBites::ApplicationContext("Bootstrap Ogre")
 {
 }
 
-void Application::Setup()
+void Application::setup()
 {
 	// do not forget to call the base first
 	OgreBites::ApplicationContext::setup();
 
 	// get a pointer to the already created root
-	Ogre::Root *root = getRoot();
-	Ogre::SceneManager *scnMgr = root->createSceneManager();
+	root = getRoot();
+	scnMgr = root->createSceneManager();
 
 	// register our scene with the RTSS
-	Ogre::RTShader::ShaderGenerator *shadergen = Ogre::RTShader::ShaderGenerator::getSingletonPtr();
+	shadergen = Ogre::RTShader::ShaderGenerator::getSingletonPtr();
 	shadergen->addSceneManager(scnMgr);
 
 	// without light we would just get a black screen
@@ -73,19 +60,21 @@ void Application::Setup()
 	// mParams->setNamedConstant("u_ScaleIBLAmbient", Ogre::Vector4(Ogre::Real(1)));
 }
 
-void Application::RegisterSystem(SystemBase *system)
-{
-	// Add system to systems array
-}
+// void Application::RegisterSystem(SystemBase *system)
+// {
+// 	// Add system to systems array
+// }
 
 void Application::Run()
 {
+	modelNode->setScale(Ogre::Vector3(5.0, 5.0, 5.0));
+
 	SDL_SetHintWithPriority(SDL_HINT_MOUSE_RELATIVE_MODE_WARP, "1", SDL_HINT_OVERRIDE);
 	SDL_SetRelativeMouseMode(SDL_TRUE);
 
-	// const double CAMERA_ROT_RATE = 0.025;
+	const double CAMERA_ROT_RATE = 0.025;
 
-	const Uint8 *keyStates = SDL_GetKeyboardState(NULL);
+	const Uint8 *keyStates = SDL_GetKeyboardState(nullptr);
 
 	bool quit = false;
 
@@ -100,20 +89,20 @@ void Application::Run()
 
 		if (SDL_GetRelativeMouseMode())
 		{
-			// int32_t MouseDeltaX, MouseDeltaY;
-			// SDL_GetRelativeMouseState(&MouseDeltaX, &MouseDeltaY);
+			int32_t MouseDeltaX, MouseDeltaY;
+			SDL_GetRelativeMouseState(&MouseDeltaX, &MouseDeltaY);
 
-			// Ogre::Quaternion cameraOrientation = this->camNode->getOrientation();
-			// Ogre::Quaternion yaw = Ogre::Quaternion(Ogre::Radian(CAMERA_ROT_RATE), Ogre::Vector3(0, CAMERA_ROT_RATE * -MouseDeltaX, 0.0));
-			// cameraOrientation = yaw * cameraOrientation;
-			// Ogre::Quaternion pitch = Ogre::Quaternion(Ogre::Radian(CAMERA_ROT_RATE), Ogre::Vector3(CAMERA_ROT_RATE * -MouseDeltaY, 0.0, 0.0));
-			// cameraOrientation = cameraOrientation * pitch;
-			// this->camNode->setOrientation(cameraOrientation);
+			Ogre::Quaternion cameraOrientation = this->camNode->getOrientation();
+			Ogre::Quaternion yaw = Ogre::Quaternion(Ogre::Radian(CAMERA_ROT_RATE), Ogre::Vector3(0, CAMERA_ROT_RATE * -MouseDeltaX, 0.0));
+			cameraOrientation = yaw * cameraOrientation;
+			Ogre::Quaternion pitch = Ogre::Quaternion(Ogre::Radian(CAMERA_ROT_RATE), Ogre::Vector3(CAMERA_ROT_RATE * -MouseDeltaY, 0.0, 0.0));
+			cameraOrientation = cameraOrientation * pitch;
+			this->camNode->setOrientation(cameraOrientation);
 
-			// Ogre::Vector3 cameraPosition = this->camNode->getPosition();
-			// double translationForward = (!!keyStates[SDL_SCANCODE_D] * 0.1) - (!!keyStates[SDL_SCANCODE_A] * 0.1);
-			// double translationLeft = (!!keyStates[SDL_SCANCODE_S] * 0.1) - (!!keyStates[SDL_SCANCODE_W] * 0.1);
-			// this->camNode->setPosition(Ogre::Vector3(cameraPosition.x + translationForward, 0, cameraPosition.z + translationLeft));
+			Ogre::Vector3 cameraPosition = this->camNode->getPosition();
+			double translationForward = (!!keyStates[SDL_SCANCODE_D] * 0.1) - (!!keyStates[SDL_SCANCODE_A] * 0.1);
+			double translationLeft = (!!keyStates[SDL_SCANCODE_S] * 0.1) - (!!keyStates[SDL_SCANCODE_W] * 0.1);
+			this->camNode->setPosition(Ogre::Vector3(cameraPosition.x + translationForward, 0, cameraPosition.z + translationLeft));
 		}
 
 		SDL_Event event;

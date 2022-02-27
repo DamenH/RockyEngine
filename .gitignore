@@ -1,9 +1,6 @@
+.idea
+.vscode
+
 cmake-build-debug
-!cmake-build-debug/*.cfg
-
-vcpkg_installed
-
-build/*
-!build/*.cfg
 
 lib

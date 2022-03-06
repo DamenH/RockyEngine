@@ -59,13 +59,16 @@ else
 ######################################### EnTT END #################################################
 
 
+####################################### RayLib START ###############################################
 
 
+######################################### RayLib END ###############################################
 
 
+####################################### Boost START ################################################
 
 
-
+######################################### Boost END ################################################
 
 
 
@@ -91,18 +94,6 @@ else
   echo "======================================================================="
   echo "Building and installing Ogre $OGRE_VERSION_TAG"
   echo "-----------------------------------------------------------------------"
-
-  # Install dependencies if is needed
-  echo "===[ Checking Dependencies ]==========================================="
-  DEPENDENCIES=(libgbm-dev libgles2-mesa-dev libxt-dev libxaw7-dev doxygen zziplib-bin cmake-qt-gui libassimp-dev libassimp5 assimp-utils libopenexr25 libopenexr-dev libbullet-dev libbullet-extras-dev openexr cmake)
-  for i in "${DEPENDENCIES[@]}"; do
-    if [ "$(is_package_installed $i)" = "no" ]; then
-      echo $i
-      sudo apt install -y $i
-    else
-      echo "Found $i"
-    fi
-  done
 
   cd ogre
 

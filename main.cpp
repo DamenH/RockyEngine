@@ -4,12 +4,12 @@
 int main(int argc, char *argv[])
 {
     Application app;
-    app.initApp();
+//    app.initApp();
 
     FreeCameraSystem freeCameraSystem;
     app.RegisterSystem(&freeCameraSystem);
 
-    app.Run();
+//    app.Run();
 
     return 0;
 }

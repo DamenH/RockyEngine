@@ -2,15 +2,14 @@
 
 #include "SystemBase.h"
 
-#include <OgreApplicationContext.h>
 #include <entt/entt.hpp>
 
 
-class Application : public OgreBites::ApplicationContext {
+class Application{
 public:
     Application();
 
-    void setup() override;
+    void setup();
 
     void RegisterSystem(SystemBase *system);
     void InitializeSystems();
@@ -18,15 +17,12 @@ public:
 
     void Run();
 
-    Ogre::SceneNode *camNode{};
-    Ogre::SceneNode *modelNode{};
+//    Ogre::SceneNode *camNode{};
+//    Ogre::SceneNode *modelNode{};
 
     entt::registry registry;
 
 private:
-    Ogre::Root *root{};
-    Ogre::SceneManager *sceneManager{};
-    Ogre::RTShader::ShaderGenerator *shaderGenerator{};
 
     SystemBase *systems[128]{};
     uint8_t systemsIndex = 0;

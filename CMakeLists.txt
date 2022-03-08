@@ -10,11 +10,6 @@ target_include_directories(Game
         "${CMAKE_SOURCE_DIR}/lib"
         "${CMAKE_SOURCE_DIR}/src")
 
-find_package(SDL2 CONFIG REQUIRED)
-target_link_libraries(Game PRIVATE SDL2::SDL2 SDL2::SDL2main SDL2::SDL2-static)
-
-find_package(OGRE REQUIRED COMPONENTS Bites CONFIG)
-target_link_libraries(Game PRIVATE OgreMain OgreBites Codec_STBI)
 
 add_subdirectory("${CMAKE_SOURCE_DIR}/third_party/raylib")
 

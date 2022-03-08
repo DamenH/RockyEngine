@@ -7,7 +7,7 @@ add_executable(Game main.cpp)
 
 target_include_directories(Game
         PRIVATE
-        "${CMAKE_SOURCE_DIR}/lib"
+        "${CMAKE_SOURCE_DIR}/third_party/entt/src"
         "${CMAKE_SOURCE_DIR}/src")
 
 

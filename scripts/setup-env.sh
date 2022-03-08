@@ -50,7 +50,9 @@ else
 
   echo "===[ Copy EnTT src ]==================================================="
   # Install entt
-  cp src/entt ../../lib
+  mkdir ../../lib
+  mkdir ../../lib/entt
+  cp ./src/entt/ ../../lib -r
 
   cd ../../
   
@@ -91,60 +93,59 @@ else
   
 
 
-  echo "======================================================================="
-  echo "Building and installing Ogre $OGRE_VERSION_TAG"
-  echo "-----------------------------------------------------------------------"
+  # echo "======================================================================="
+  # echo "Building and installing Ogre $OGRE_VERSION_TAG"
+  # echo "-----------------------------------------------------------------------"
 
-  cd ogre
+  # cd ogre
 
-  echo "===[ Checkout $OGRE_VERSION_TAG ]======================================"
-  cd third_party/ogre
-  git checkout $OGRE_VERSION_TAG
+  # echo "===[ Checkout $OGRE_VERSION_TAG ]======================================"
+  # cd third_party/ogre
+  # git checkout $OGRE_VERSION_TAG
 
-  echo "===[ Build ]==========================================================="
-  # Build ogre
-  cmake .
-  cmake --build . --config Release
+  # echo "===[ Build ]==========================================================="
+  # # Build ogre
+  # cmake .
+  # cmake --build . --config Release
 
-  echo "===[ Install ]========================================================="
-  # Install ogre
-  sudo cmake --build . --config Release --target install
+  # echo "===[ Install ]========================================================="
+  # # Install ogre
+  # sudo cmake --build . --config Release --target install
 
-  echo "===[ Clean Up ]========================================================"
-  # Remove ogre repo
-  cd ..
-  rm -rf ogre
+  # echo "===[ Clean Up ]========================================================"
+  # # Remove ogre repo
+  # cd ..
+  # rm -rf ogre
   
-  echo "===[ Ogre Done ]============================================================"
+  # echo "===[ Ogre Done ]============================================================"
 
 
-  # Set ENTT version
-  ENTT_VERSION_TAG="${ENTT_VERSION_TAG:-v3.9.0}";
-  echo "======================================================================="
-  echo "Building and installing ENTT $ENTT_VERSION_TAG"
-  echo "-----------------------------------------------------------------------"
+  # # Set ENTT version
+  # ENTT_VERSION_TAG="${ENTT_VERSION_TAG:-v3.9.0}";
+  # echo "======================================================================="
+  # echo "Building and installing ENTT $ENTT_VERSION_TAG"
+  # echo "-----------------------------------------------------------------------"
 
-  echo "===[ Clean ]==========================================================="
-  rm -rf lib
-  mkdir lib
+  # echo "===[ Clean ]==========================================================="
+  # rm -rf lib
+  # mkdir lib
 
-  echo "===[ Cloning ENTT ]===================================================="
-  git clone https://github.com/skypjack/entt.git
-  cd entt
+  # echo "===[ Cloning ENTT ]===================================================="
+  # git clone https://github.com/skypjack/entt.git
+  # cd entt
 
-  echo "===[ Checkout $ENTT_VERSION_TAG ]======================================"
-  git checkout $ENTT_VERSION_TAG
+  # echo "===[ Checkout $ENTT_VERSION_TAG ]======================================"
+  # git checkout $ENTT_VERSION_TAG
 
-  echo "===[ Copy ]============================================================"
-  # Install ENTT
-  cd src
-  cp -r entt ../../lib/
+  # echo "===[ Copy ]============================================================"
+  # # Install ENTT
+  # cd src
+  # cp -r entt ../lib/
 
-  echo "===[ Clean Up ]========================================================"
-  # Remove ENTT repo
-  cd ../../
-  rm -rf entt
+  # echo "===[ Clean Up ]========================================================"
+  # # Remove ENTT repo
+  # cd ../../
   
-  echo "===[ Done ]============================================================"
+  # echo "===[ Done ]============================================================"
 
 fi

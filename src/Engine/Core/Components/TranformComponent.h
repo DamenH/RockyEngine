@@ -1,17 +1,10 @@
 #pragma once
 
-#include <Ogre.h>
-
-//struct Translation {
-//    float X;
-//    float Y;
-//    float Z;
-//};
+#include <raylib.h>
 
 struct TransformComponent {
-//    Translation translation;
     float X;
     float Y;
     float Z;
-    Ogre::Quaternion rotation;
+    Quaternion Rotation;
 };

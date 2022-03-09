@@ -18,12 +18,7 @@ class TransformSystem : public SystemBase {
         auto transformView = registry.view<NodeComponent, TransformComponent>();
 
         for (auto entity: transformView) {
-            auto &node = transformView.get<NodeComponent>(entity);
-            auto &transform = transformView.get<TransformComponent>(entity);
-
-            node.node->setOrientation(transform.rotation);
-            node.node->setPosition(
-                    Ogre::Vector3(transform.X, transform.Y, transform.Z));
+            
 
         }
     }

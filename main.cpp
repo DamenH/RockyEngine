@@ -4,7 +4,7 @@
 int main(int argc, char *argv[])
 {
     Application app;
-    app.initApp();
+    app.setup();
 
     FreeCameraSystem freeCameraSystem;
     app.RegisterSystem(&freeCameraSystem);

@@ -5,8 +5,6 @@
 #include "Engine/Core/Components/CameraComponent.h"
 #include "Engine/Core/Components/TranformComponent.h"
 
-#include <Ogre.h>
-#include <OgreApplicationContext.h>
 #include <SDL2/SDL.h>
 #include <entt/entt.hpp>
 
@@ -35,7 +33,7 @@ class FreeCameraSystem : public SystemBase {
 
             input.MouseDeltaX;
             input.MouseDeltaY;
-
+/*
             Ogre::Quaternion cameraOrientation = cameraTransform.rotation;
             Ogre::Quaternion yaw = Ogre::Quaternion(Ogre::Radian(CAMERA_ROT_RATE),
                                                     Ogre::Vector3(0, CAMERA_ROT_RATE * -input.MouseDeltaX, 0.0));
@@ -45,7 +43,7 @@ class FreeCameraSystem : public SystemBase {
             cameraOrientation = cameraOrientation * pitch;
 
             cameraTransform.rotation = cameraOrientation;
-
+*/
             auto translationLeft = (float) ((input.RightPressed * 0.1) - (input.LeftPressed * 0.1));
             auto translationForward = (float) ((input.BackPressed * 0.1) - (input.ForwardPressed * 0.1));
             cameraTransform.Z += translationForward;

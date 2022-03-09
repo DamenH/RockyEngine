@@ -6,68 +6,23 @@
 #include "Components/NodeComponent.h"
 #include "Components/TranformComponent.h"
 
-#include <Ogre.h>
-#include <OgreApplicationContext.h>
 #include <SDL2/SDL.h>
 #include <entt/entt.hpp>
+#include <boost/math/quaternion.hpp>
+#include <raylib.h>
 
 
-Application::Application() : OgreBites::ApplicationContext("Bootstrap Ogre") {
+Application::Application(){
 }
 
 void Application::setup() {
-    // do not forget to call the base first
-    OgreBites::ApplicationContext::setup();
-
-    // get a pointer to the already created root
-    root = getRoot();
-    sceneManager = root->createSceneManager();
-
-    // register our scene with the RTSS
-    shaderGenerator = Ogre::RTShader::ShaderGenerator::getSingletonPtr();
-    shaderGenerator->addSceneManager(sceneManager);
-
-    // without light we would just get a black screen
-    Ogre::Light *light = sceneManager->createLight("MainLight");
-    Ogre::SceneNode *lightNode = sceneManager->getRootSceneNode()->createChildSceneNode();
-    lightNode->setPosition(0, 10, 15);
-    lightNode->attachObject(light);
-
-    // also need to tell where we are
-    camNode = sceneManager->getRootSceneNode()->createChildSceneNode();
-//    camNode->setPosition(0, 0, 15);
-    camNode->lookAt(Ogre::Vector3(0, 0, -1), Ogre::Node::TS_PARENT);
-
-    // create the camera
-    Ogre::Camera *cam = sceneManager->createCamera("myCam");
-    cam->setNearClipDistance(5); // specific to this sample
-    cam->setAutoAspectRatio(true);
-    camNode->attachObject(cam);
+    InitWindow(800, 600, "Rocky Engine - Raylib Edition");
+    SetTargetFPS(60);
 
     // Create camera entity
     auto entity = registry.create();
     registry.emplace<CameraComponent>(entity);
-    registry.emplace<NodeComponent>(entity, camNode);
-    registry.emplace<TransformComponent>(entity, 0, 0, 25, camNode->getOrientation());
-
-    // and tell it to render into the main window
-    getRenderWindow()->addViewport(cam);
-
-    // finally something to render
-    Ogre::Entity *ent = sceneManager->createEntity("DamagedHelmet.mesh");
-    modelNode = sceneManager->getRootSceneNode()->createChildSceneNode();
-    modelNode->attachObject(ent);
-    modelNode->setScale(Ogre::Vector3(5.0, 5.0, 5.0));
-
-    unsigned short src, dst;
-    if (!ent->getMesh()->suggestTangentVectorBuildParams(Ogre::VES_TANGENT, src, dst)) {
-        // enforce that we have tangent vectors
-        ent->getMesh()->buildTangentVectors(Ogre::VES_TANGENT, src, dst);
-    }
-
-    Ogre::MaterialPtr mat = Ogre::MaterialManager::getSingleton().getByName("DamagedHelmet");
-    // Ogre::GpuProgramParametersSharedPtr mParams = mat->getTechnique(0)->getPass(0)->getFragmentProgramParameters();
-    // mParams->setNamedConstant("u_ScaleIBLAmbient", Ogre::Vector4(Ogre::Real(1)));
+    registry.emplace<TransformComponent>(entity, 0, 0, 25, new boost::math::quaternion<float>());
 }
 
 void Application::RegisterSystem(SystemBase *system) {
@@ -101,6 +56,15 @@ void Application::Run() {
     RegisterSystem(&transformSystem);
     InitializeSystems();
 
+    // Define the camera to look into our 3d world
+    Camera3D camera = { 0 };
+    camera.position = (Vector3){ 10.0f, 10.0f, 10.0f }; // Camera position
+    camera.target = (Vector3){ 0.0f, 0.0f, 0.0f };      // Camera looking at point
+    camera.up = (Vector3){ 0.0f, 1.0f, 0.0f };          // Camera up vector (rotation towards target)
+    camera.fovy = 45.0f;                                // Camera field-of-view Y
+    camera.projection = CAMERA_PERSPECTIVE;                   // Camera mode type
+    SetCameraMode(camera, CAMERA_FREE); // Set a free camera mode
+
 
     while (!quit) {
         SDL_PumpEvents();
@@ -122,7 +86,20 @@ void Application::Run() {
             }
         }
 
-        this->getRoot()->renderOneFrame();
+        BeginDrawing();
+
+            ClearBackground(BLACK);
+
+            BeginMode3D(camera);
+
+                DrawCube({0.0f,0.0f,0.0f}, 2.0f, 2.0f, 2.0f, RED);
+                DrawCubeWires({0.0f,0.0f,0.0f}, 2.0f, 2.0f, 2.0f, MAROON);
+
+                DrawGrid(10, 1.0f);
+
+            EndMode3D();
+
+        EndDrawing();
     }
     SDL_Quit();
 }

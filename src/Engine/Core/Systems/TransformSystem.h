@@ -4,7 +4,6 @@
 #include "Engine/Core/Components/NodeComponent.h"
 #include "Engine/Core/Components/TranformComponent.h"
 
-#include <SDL2/SDL.h>
 #include <entt/entt.hpp>
 
 class TransformSystem : public SystemBase {

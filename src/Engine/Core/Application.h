@@ -17,9 +17,7 @@ public:
     void Run();
 
     entt::registry registry;
-
-private:
-    
+private:    
 
     SystemBase *systems[128]{};
     uint8_t systemsIndex = 0;

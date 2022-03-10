@@ -10,7 +10,8 @@ target_include_directories(Game
         "${CMAKE_SOURCE_DIR}/third_party/entt/src"
         "${CMAKE_SOURCE_DIR}/src")
 
-
+set(CUSTOMIZE_BUILD On)
+set(SUPPORT_FILEFORMAT_JPG On)
 add_subdirectory("${CMAKE_SOURCE_DIR}/third_party/raylib")
 set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE) # don't build the supplied examples
 set(BUILD_GAMES    OFF CACHE BOOL "" FORCE) # don't build the supplied example games

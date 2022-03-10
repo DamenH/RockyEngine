@@ -44,7 +44,6 @@ void Application::InitializeSystems()
 
 void Application::UpdateSystems()
 {
-    std::cout << "Updating Systems\n";
     for (uint8_t i = 0; i < systemsIndex; i++)
     {
         systems[i]->OnUpdate(registry);
@@ -65,7 +64,7 @@ void Application::Run()
     InputSystem inputSystem;
     TransformSystem transformSystem;
     GraphicsSystem graphicsSystem;
-    
+
     RegisterSystem(&inputSystem);
     RegisterSystem(&transformSystem);
     RegisterSystem(&graphicsSystem);

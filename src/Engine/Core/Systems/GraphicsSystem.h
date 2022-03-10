@@ -7,6 +7,7 @@
 #include <entt/entt.hpp>
 #include <raylib.h>
 #include <iostream>
+#include <stdlib.h>
 
 class GraphicsSystem : public SystemBase
 {
@@ -25,16 +26,15 @@ class GraphicsSystem : public SystemBase
         camera.projection = CAMERA_PERSPECTIVE;           // Camera mode type
         SetCameraMode(camera, CAMERA_FIRST_PERSON);       // Set a free camera mode
         
-        std::srand(0);
-        int roidCount = 100;
+        std::cout << "Generating scene";
+        float roidCount = 100.0f;
         for (int i = 0; i < roidCount; i++)
         {
             auto entity = registry.create();
             registry.emplace<MeshComponent>(entity);
-            float x = ((rand() - rand()) / RAND_MAX) * roidCount;
-            float y = ((rand() - rand()) / RAND_MAX) * roidCount;
-            float z = ((rand() - rand()) / RAND_MAX) * roidCount * 0.1f;
-            std::cout << x;
+            float x = ((rand() - rand()) / (float)RAND_MAX ) * roidCount;
+            float z = ((rand() - rand()) / (float)RAND_MAX ) * roidCount;
+            float y = ((rand() - rand()) / (float)RAND_MAX ) * roidCount * 0.1f;
             registry.emplace<TransformComponent>(entity, x, y, z);
         }
     }

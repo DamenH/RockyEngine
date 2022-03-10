@@ -1,6 +1,7 @@
 #include "Application.h"
 #include "Systems/InputSystem.h"
 #include "Systems/TransformSystem.h"
+#include "Systems/GraphicsSystem.h"
 
 #include "Components/CameraComponent.h"
 #include "Components/NodeComponent.h"
@@ -8,41 +9,52 @@
 
 #include <SDL2/SDL.h>
 #include <entt/entt.hpp>
-#include <boost/math/quaternion.hpp>
 #include <raylib.h>
+#include <iostream>
 
-
-Application::Application(){
+Application::Application()
+{
 }
 
-void Application::setup() {
-    InitWindow(800, 600, "Rocky Engine - Raylib Edition");
-    SetTargetFPS(60);
+void Application::setup()
+{
+
+    std::cout << "Running Setup\n";
 
     // Create camera entity
     auto entity = registry.create();
     registry.emplace<CameraComponent>(entity);
-    registry.emplace<TransformComponent>(entity, 0, 0, 25, new boost::math::quaternion<float>());
+    registry.emplace<TransformComponent>(entity, 0, 0, 25);
 }
 
-void Application::RegisterSystem(SystemBase *system) {
+void Application::RegisterSystem(SystemBase *system)
+{
     systems[systemsIndex] = system;
     systemsIndex++;
 }
 
-void Application::InitializeSystems() {
-    for (uint8_t i = 0; i < systemsIndex; i++) {
+void Application::InitializeSystems()
+{
+    std::cout << "Initializing Systems\n";
+    for (uint8_t i = 0; i < systemsIndex; i++)
+    {
         systems[i]->OnStartup(registry);
     }
 }
 
-void Application::UpdateSystems() {
-    for (uint8_t i = 0; i < systemsIndex; i++) {
+void Application::UpdateSystems()
+{
+    std::cout << "Updating Systems\n";
+    for (uint8_t i = 0; i < systemsIndex; i++)
+    {
         systems[i]->OnUpdate(registry);
     }
 }
 
-void Application::Run() {
+void Application::Run()
+{
+
+    std::cout << "Running\n";
 
     SDL_SetHintWithPriority(SDL_HINT_MOUSE_RELATIVE_MODE_WARP, "1", SDL_HINT_OVERRIDE);
     SDL_SetRelativeMouseMode(SDL_TRUE);
@@ -52,54 +64,46 @@ void Application::Run() {
 
     InputSystem inputSystem;
     TransformSystem transformSystem;
+    GraphicsSystem graphicsSystem;
+    
     RegisterSystem(&inputSystem);
     RegisterSystem(&transformSystem);
+    RegisterSystem(&graphicsSystem);
+
     InitializeSystems();
 
-    // Define the camera to look into our 3d world
-    Camera3D camera = { 0 };
-    camera.position = (Vector3){ 10.0f, 10.0f, 10.0f }; // Camera position
-    camera.target = (Vector3){ 0.0f, 0.0f, 0.0f };      // Camera looking at point
-    camera.up = (Vector3){ 0.0f, 1.0f, 0.0f };          // Camera up vector (rotation towards target)
-    camera.fovy = 45.0f;                                // Camera field-of-view Y
-    camera.projection = CAMERA_PERSPECTIVE;                   // Camera mode type
-    SetCameraMode(camera, CAMERA_FREE); // Set a free camera mode
-
-
-    while (!quit) {
+    std::cout << "Entering Main Loop\n";
+    while (!quit)
+    {
         SDL_PumpEvents();
 
-        if (keyStates[SDL_SCANCODE_ESCAPE]) {
+        if (keyStates[SDL_SCANCODE_ESCAPE])
+        {
             SDL_SetRelativeMouseMode(SDL_FALSE);
         }
 
-        if (SDL_GetRelativeMouseMode()) {
+        /*if (SDL_GetRelativeMouseMode())
+        {
             UpdateSystems();
-        }
+        }*/
+
+        UpdateSystems();
 
         SDL_Event event;
-        while (SDL_PollEvent(&event)) {
-            switch (event.type) {
-                case SDL_QUIT:
-                    quit = true;
-                    break;
+        while (SDL_PollEvent(&event))
+        {
+            switch (event.type)
+            {
+            case SDL_QUIT:
+                quit = true;
+                break;
             }
         }
 
-        BeginDrawing();
-
-            ClearBackground(BLACK);
-
-            BeginMode3D(camera);
-
-                DrawCube({0.0f,0.0f,0.0f}, 2.0f, 2.0f, 2.0f, RED);
-                DrawCubeWires({0.0f,0.0f,0.0f}, 2.0f, 2.0f, 2.0f, MAROON);
-
-                DrawGrid(10, 1.0f);
-
-            EndMode3D();
-
-        EndDrawing();
+        if (!quit)
+        {
+            quit = WindowShouldClose();
+        }
     }
     SDL_Quit();
 }

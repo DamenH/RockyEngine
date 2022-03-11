@@ -1,14 +1,14 @@
+#pragma once
+
 #include "AssetManager.h"
 #include <raylib.h>
 
-AssetManager::AssetManager()
-{
+AssetManager::AssetManager() {
 
 }
 
-void AssetManager::Load()
-{
-    std::cout << "Loading resources";
+void AssetManager::Load() {
+    //std::cout << "Loading resources";
     models[0] = LoadModel("media/Asteroid/asteroid_00.obj");
-    GenTextureMipmaps(models[0].materials[0].maps[0].texture);
+    GenTextureMipmaps(&models[0].materials[0].maps[0].texture);
 }

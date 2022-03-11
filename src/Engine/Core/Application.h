@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Engine/Core/AssetManager.h"
 #include "SystemBase.h"
 
 #include <entt/entt.hpp>
@@ -17,6 +18,7 @@ public:
     void Run();
 
     entt::registry registry;
+
 private:    
 
     SystemBase *systems[128]{};

@@ -4,10 +4,7 @@
 #include "Systems/GraphicsSystem.h"
 
 #include "Components/CameraComponent.h"
-#include "Components/NodeComponent.h"
 #include "Components/TranformComponent.h"
-
-#include "AssetManager.h"
 
 #include <SDL2/SDL.h>
 #include <entt/entt.hpp>
@@ -22,7 +19,6 @@ void Application::setup()
 {
 
     std::cout << "Running Setup\n";
-
     AssetManager assetManager;
     assetManager.Load();
 

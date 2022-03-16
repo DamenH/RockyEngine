@@ -13,20 +13,11 @@
 class GraphicsSystem : public SystemBase
 {
     Camera3D camera;
-    Model model[4];
-    Texture2D texture;
-    Texture2D billboard;
     float LodScalar;
     Color lodColors[5];
 
     void OnStartup(entt::registry &registry) override
     {
-        SetConfigFlags(FLAG_MSAA_4X_HINT |
-                       FLAG_VSYNC_HINT |
-                       FLAG_WINDOW_RESIZABLE
-                       // FLAG_FULLSCREEN_MODE
-        );
-        InitWindow(1920, 1080, "Rocky Engine - Raylib Edition");
         //SetTargetFPS(144);
 
         camera = {0};
@@ -49,6 +40,8 @@ class GraphicsSystem : public SystemBase
             float z = ((rand() - rand()) / (float)RAND_MAX) * scalar;
 
             registry.emplace<TransformComponent>(entity, x, y, z);
+            ModelSet* set = AssetManager::GetModelSet(0);
+            registry.emplace<ModelComponent>(entity, *set);
         }
 
         LodScalar = 100.0f;
@@ -72,7 +65,6 @@ class GraphicsSystem : public SystemBase
             lodColors[1] = (Color){0, 255, 64, 255}; //GREEN
             lodColors[2] = (Color){255, 255, 0, 255}; //YELLOW
             lodColors[3] = (Color){255, 64, 0, 255}; // RED
-            lodColors[4] = (Color){0, 255, 255, 255}; // CYAN
         }
         else
         {
@@ -80,34 +72,30 @@ class GraphicsSystem : public SystemBase
             lodColors[1] = (Color){255, 255, 255, 255};
             lodColors[2] = (Color){255, 255, 255, 255};
             lodColors[3] = (Color){255, 255, 255, 255};
-            lodColors[4] = (Color){255, 255, 255, 255};
         }
 
         for (auto entity : transformView)
         {
             auto &transform = transformView.get<TransformComponent>(entity);
+            auto &model = transformView.get<ModelComponent>(entity);
             Vector3 pos = (Vector3){transform.X, transform.Y, transform.Z};
             float distance = Vector3Distance(pos, camera.position);
 
             if (distance < 0.05f * LodScalar)
             {
-                DrawModel(model[0], pos, 1.0f, lodColors[0]);
+                DrawModel(*model.modelSet.model, pos, 1.0f, lodColors[0]);
             }
             else if (distance < 0.25f * LodScalar)
             {
-                DrawModel(model[1], pos, 1.0f, lodColors[1]);
+                DrawModel(*model.modelSet.modelLod1, pos, 1.0f, lodColors[0]);
             }
-            /*else if (distance < 0.5f * LodScalar)
-            {
-                DrawModel(model[2], pos, 1.0f, lodColors[2]);
-            }*/
             else if (distance < 2.0f * LodScalar)
             {
-                DrawModel(model[3], pos, 1.0f, lodColors[3]);
+                DrawModel(*model.modelSet.modelLod2, pos, 1.0f, lodColors[0]);
             }
             else
             {
-                DrawBillboard(camera, billboard, pos, 5.0f, lodColors[4]);
+                DrawBillboard(camera, *model.modelSet.Billboard, pos, 5.0f, lodColors[4]);
             }
         }
 

@@ -17,10 +17,16 @@ Application::Application()
 
 void Application::setup()
 {
-
     std::cout << "Running Setup\n";
-    AssetManager assetManager;
-    assetManager.Load();
+
+    std::cout << "Creating window and generating OpenGL context\n";
+    SetConfigFlags(FLAG_MSAA_4X_HINT |
+                   FLAG_VSYNC_HINT |
+                   FLAG_WINDOW_RESIZABLE
+            // FLAG_FULLSCREEN_MODE
+    );
+    InitWindow(1920, 1080, "Rocky Engine - Raylib Edition");
+    AssetManager::Load();
 
     // Create camera entity
     auto entity = registry.create();
@@ -41,6 +47,8 @@ void Application::InitializeSystems()
     {
         systems[i]->OnStartup(registry);
     }
+
+
 }
 
 void Application::UpdateSystems()

@@ -18,7 +18,7 @@ public:
     void Run();
 
     entt::registry registry;
-
+    AssetManager assetManager;
 private:    
 
     SystemBase *systems[128]{};

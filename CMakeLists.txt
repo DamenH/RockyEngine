@@ -5,8 +5,11 @@ set(CMAKE_CXX_STANDARD 20)
 #set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_BINARY_DIR ${CMAKE_SOURCE_DIR}/build)
 
-#add_executable(Game main.cpp src/Engine/Core/AssetManager.cpp)
-add_executable(Game main.cpp)
+add_executable(Game
+        main.cpp
+        src/Engine/Core/AssetManager.cpp
+        )
+#add_executable(Game main.cpp)
 
 target_include_directories(Game
         PRIVATE

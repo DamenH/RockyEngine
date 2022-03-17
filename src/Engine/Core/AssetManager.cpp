@@ -1,6 +1,7 @@
 #include "AssetManager.h"
 #include <raylib.h>
 #include <iostream>
+#include <unistd.h>
 
 ModelSet modelSets[128];
 int modelSetCount = 0;
@@ -14,7 +15,10 @@ ModelSet* AssetManager::GetModelSet(int index)
 }
 
 void AssetManager::Load() {
-    std::cout << "Loading resources";
+    char cwd[256];
+    getcwd(cwd, 256);
+    std::cout << "Current working directory: " << cwd << std::endl;
+    std::cout << "Loading resources" << std::endl;
     //TODO: Change to dynamic search and load of assets
     loadModelSet("../media/Asteroid/asteroid_00.obj",
                  "../media/Asteroid/asteroid_01.obj",
@@ -22,7 +26,7 @@ void AssetManager::Load() {
                  "../media/Asteroid/asteroid_4k.jpg",
                  "../media/Asteroid/asteroid_billboard.png"
                  );
-    std::cout << "Done";
+    std::cout << "Done" << std::endl;
 }
 
 void AssetManager::loadModelSet(char* meshFile, char* meshFileLod1, char* meshFileLod2, char* textureFile, char* billboardFile)

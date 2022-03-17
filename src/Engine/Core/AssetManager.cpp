@@ -20,7 +20,7 @@ void AssetManager::Load() {
                  "../media/Asteroid/asteroid_01.obj",
                  "../media/Asteroid/asteroid_03.obj",
                  "../media/Asteroid/asteroid_4k.jpg",
-                 "../media/Asteroid/asteroid_billboard.jpg"
+                 "../media/Asteroid/asteroid_billboard.png"
                  );
     std::cout << "Done";
 }
@@ -39,12 +39,12 @@ void AssetManager::loadModelSet(char* meshFile, char* meshFileLod1, char* meshFi
     GenTextureMipmaps(&billboard);
 
     ModelSet set;
-    set.model = &model;
-    set.modelLod1 = &model1;
-    set.modelLod2 = &model2;
-    set.Billboard = &billboard;
+    set.model = model;
+    set.modelLod1 = model1;
+    set.modelLod2 = model2;
+    set.Billboard = billboard;
 
-    modelSets[modelSetCount];
+    modelSets[modelSetCount] = set;
 
     modelSetCount++;
 }

@@ -10,6 +10,8 @@
 #include <iostream>
 #include <stdlib.h>
 
+
+
 class GraphicsSystem : public SystemBase
 {
     Camera3D camera;
@@ -28,20 +30,18 @@ class GraphicsSystem : public SystemBase
         camera.projection = CAMERA_PERSPECTIVE;         // Camera mode type
         SetCameraMode(camera, CAMERA_FIRST_PERSON);     // Set a free camera mode
 
-        std::cout << "Generating scene";
+        std::cout << "Generating scene\n";
         float roidCount = 10000.0f;
         float scalar = log(roidCount) * 150.0f;
         for (int i = 0; i < roidCount; i++)
         {
             auto entity = registry.create();
-            registry.emplace<ModelComponent>(entity);
             float x = ((rand() - rand()) / (float)RAND_MAX) * scalar;
             float y = ((rand() - rand()) / (float)RAND_MAX) * scalar * 0.05f;
             float z = ((rand() - rand()) / (float)RAND_MAX) * scalar;
 
             registry.emplace<TransformComponent>(entity, x, y, z);
-            ModelSet* set = AssetManager::GetModelSet(0);
-            registry.emplace<ModelComponent>(entity, *set);
+            registry.emplace<ModelComponent>(entity, 0);
         }
 
         LodScalar = 100.0f;
@@ -81,21 +81,23 @@ class GraphicsSystem : public SystemBase
             Vector3 pos = (Vector3){transform.X, transform.Y, transform.Z};
             float distance = Vector3Distance(pos, camera.position);
 
+            ModelSet* modelSet = AssetManager::GetModelSet(model.ModelSetId);
+
             if (distance < 0.05f * LodScalar)
             {
-                DrawModel(*model.modelSet.model, pos, 1.0f, lodColors[0]);
+                DrawModel(modelSet->model, pos, 1.0f, lodColors[0]);
             }
             else if (distance < 0.25f * LodScalar)
             {
-                DrawModel(*model.modelSet.modelLod1, pos, 1.0f, lodColors[0]);
+                DrawModel(modelSet->modelLod1, pos, 1.0f, lodColors[1]);
             }
             else if (distance < 2.0f * LodScalar)
             {
-                DrawModel(*model.modelSet.modelLod2, pos, 1.0f, lodColors[0]);
+                DrawModel(modelSet->modelLod2, pos, 1.0f, lodColors[2]);
             }
             else
             {
-                DrawBillboard(camera, *model.modelSet.Billboard, pos, 5.0f, lodColors[4]);
+                DrawBillboard(camera, modelSet->Billboard, pos, 5.0f, lodColors[3]);
             }
         }
 

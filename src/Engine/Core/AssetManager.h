@@ -4,10 +4,10 @@
 
 struct ModelSet
 {
-    Model* model;
-    Model* modelLod1;
-    Model* modelLod2;
-    Texture2D* Billboard;
+    Model model;
+    Model modelLod1;
+    Model modelLod2;
+    Texture2D Billboard;
 };
 
 class AssetManager {

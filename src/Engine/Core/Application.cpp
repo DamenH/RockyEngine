@@ -11,19 +11,17 @@
 #include <raylib.h>
 #include <iostream>
 
-Application::Application()
-{
+Application::Application() {
 }
 
-void Application::setup()
-{
+void Application::setup() {
     std::cout << "Running Setup\n";
 
     std::cout << "Creating window and generating OpenGL context\n";
     SetConfigFlags(FLAG_MSAA_4X_HINT |
                    FLAG_VSYNC_HINT |
                    FLAG_WINDOW_RESIZABLE
-            // FLAG_FULLSCREEN_MODE
+                   //FLAG_FULLSCREEN_MODE
     );
     InitWindow(1920, 1080, "Rocky Engine - Raylib Edition");
     AssetManager::Load();
@@ -34,33 +32,27 @@ void Application::setup()
     registry.emplace<TransformComponent>(entity, 0, 0, 25);
 }
 
-void Application::RegisterSystem(SystemBase *system)
-{
+void Application::RegisterSystem(SystemBase *system) {
     systems[systemsIndex] = system;
     systemsIndex++;
 }
 
-void Application::InitializeSystems()
-{
+void Application::InitializeSystems() {
     std::cout << "Initializing Systems\n";
-    for (uint8_t i = 0; i < systemsIndex; i++)
-    {
+    for (uint8_t i = 0; i < systemsIndex; i++) {
         systems[i]->OnStartup(registry);
     }
 
 
 }
 
-void Application::UpdateSystems()
-{
-    for (uint8_t i = 0; i < systemsIndex; i++)
-    {
+void Application::UpdateSystems() {
+    for (uint8_t i = 0; i < systemsIndex; i++) {
         systems[i]->OnUpdate(registry);
     }
 }
 
-void Application::Run()
-{
+void Application::Run() {
 
     std::cout << "Running\n";
 
@@ -81,12 +73,10 @@ void Application::Run()
     InitializeSystems();
 
     std::cout << "Entering Main Loop\n";
-    while (!quit)
-    {
+    while (!quit) {
         SDL_PumpEvents();
 
-        if (keyStates[SDL_SCANCODE_ESCAPE])
-        {
+        if (keyStates[SDL_SCANCODE_ESCAPE]) {
             SDL_SetRelativeMouseMode(SDL_FALSE);
         }
 
@@ -98,18 +88,15 @@ void Application::Run()
         UpdateSystems();
 
         SDL_Event event;
-        while (SDL_PollEvent(&event))
-        {
-            switch (event.type)
-            {
-            case SDL_QUIT:
-                quit = true;
-                break;
+        while (SDL_PollEvent(&event)) {
+            switch (event.type) {
+                case SDL_QUIT:
+                    quit = true;
+                    break;
             }
         }
 
-        if (!quit)
-        {
+        if (!quit) {
             quit = WindowShouldClose();
         }
     }

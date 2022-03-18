@@ -9,8 +9,7 @@ int modelSetCount = 0;
 AssetManager::AssetManager() {
 }
 
-ModelSet* AssetManager::GetModelSet(int index)
-{
+ModelSet *AssetManager::GetModelSet(int index) {
     return &modelSets[index];
 }
 
@@ -25,12 +24,12 @@ void AssetManager::Load() {
                  "../media/Asteroid/asteroid_03.obj",
                  "../media/Asteroid/asteroid_4k.jpg",
                  "../media/Asteroid/asteroid_billboard.png"
-                 );
+    );
     std::cout << "Done" << std::endl;
 }
 
-void AssetManager::loadModelSet(char* meshFile, char* meshFileLod1, char* meshFileLod2, char* textureFile, char* billboardFile)
-{
+void AssetManager::loadModelSet(char *meshFile, char *meshFileLod1, char *meshFileLod2, char *textureFile,
+                                char *billboardFile) {
     Model model = LoadModel(meshFile);
     Model model1 = LoadModel(meshFileLod1);
     Model model2 = LoadModel(meshFileLod2);

@@ -19,7 +19,7 @@ void Application::setup() {
 
     std::cout << "Creating window and generating OpenGL context\n";
     SetConfigFlags(FLAG_MSAA_4X_HINT |
-                   FLAG_VSYNC_HINT |
+                   //FLAG_VSYNC_HINT |
                    FLAG_WINDOW_RESIZABLE
                    //FLAG_FULLSCREEN_MODE
     );

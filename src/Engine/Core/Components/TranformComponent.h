@@ -6,5 +6,5 @@ struct TransformComponent {
     float X;
     float Y;
     float Z;
-    //Quaternion Rotation;
+    Quaternion Rotation;
 };

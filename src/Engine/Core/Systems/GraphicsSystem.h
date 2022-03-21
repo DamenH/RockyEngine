@@ -10,20 +10,20 @@
 #include <iostream>
 #include <stdlib.h>
 #include <rlgl.h>
+#define RLIGHTS_IMPLEMENTATION
+#include "rlights.h"
 
 
 class GraphicsSystem : public SystemBase {
     Camera3D camera;
-    float LodScalar = 100.0f;
-    Color lodColors[5];
+    float LodBias = 100.0f;
     int TargetFps = 60;
     uint8_t FrameCount = 0;
     float fps = 60;
-    Quaternion tempQuat;
+    Shader shader;
+
     void OnStartup(entt::registry &registry) override
     {
-        //SetTargetFPS(144);
-
         camera = {0};
         camera.position = (Vector3) {0.0f, 10.0f, 0.0f}; // Camera position
         camera.target = (Vector3) {0.0f, 0.0f, 0.0f};    // Camera looking at point
@@ -41,9 +41,24 @@ class GraphicsSystem : public SystemBase {
             float y = ((rand() - rand()) / (float) RAND_MAX) * scalar * 0.05f;
             float z = ((rand() - rand()) / (float) RAND_MAX) * scalar;
 
-            registry.emplace<TransformComponent>(entity, x, y, z);
+            registry.emplace<TransformComponent>(entity,
+                                                 Vector3{x,y,z},
+                                                 Vector3{0.0,0.0,0.0},
+                                                 Vector3{1.0,1.0,1.0});
             registry.emplace<ModelComponent>(entity, 0);
         }
+
+        shader = LoadShader(TextFormat("../media/Shaders/base_lighting_instanced.vs", 330),
+                                   TextFormat("../media/Shaders/lighting.fs", 330));
+        // Get some shader locations
+        shader.locs[SHADER_LOC_MATRIX_MVP] = GetShaderLocation(shader, "mvp");
+        shader.locs[SHADER_LOC_VECTOR_VIEW] = GetShaderLocation(shader, "viewPos");
+        shader.locs[SHADER_LOC_MATRIX_MODEL] = GetShaderLocationAttrib(shader, "instanceTransform");
+
+        // Ambient light level
+        int ambientLoc = GetShaderLocation(shader, "ambient");
+        float ambient[4] = { 0.2f, 0.2f, 0.2f, 1.0f };
+        SetShaderValue(shader, ambientLoc, ambient, SHADER_UNIFORM_VEC4);
     }
 
     void OnUpdate(entt::registry &registry) override
@@ -59,73 +74,46 @@ class GraphicsSystem : public SystemBase {
             UpdateCamera(&camera);
         }
 
+        int MAX_INSTANCES = transformView.size_hint();
+        Matrix *transforms = (Matrix*)malloc(MAX_INSTANCES*sizeof(Matrix));   // Pre-multiplied transformations passed to rlgl
 
-        BeginDrawing();
 
-        ClearBackground(GREEN);
 
-        BeginMode3D(camera);
 
-        if (IsKeyDown(KEY_SPACE)) {
-            lodColors[0] = (Color) {255, 255, 255, 255}; //WHITE
-            lodColors[1] = (Color) {0, 255, 64, 255}; //GREEN
-            lodColors[2] = (Color) {255, 255, 0, 255}; //YELLOW
-            lodColors[3] = (Color) {255, 64, 0, 255}; // RED
-        } else {
-            lodColors[0] = (Color) {255, 255, 255, 255};
-            lodColors[1] = (Color) {255, 255, 255, 255};
-            lodColors[2] = (Color) {255, 255, 255, 255};
-            lodColors[3] = (Color) {255, 255, 255, 255};
-        }
+        CreateLight(LIGHT_DIRECTIONAL, (Vector3){ 50.0f, 50.0f, 0.0f }, Vector3Zero(), WHITE, shader);
+
+        // NOTE: We are assigning the intancing shader to material.shader
+        // to be used on mesh drawing with DrawMeshInstanced()
+        Material material = AssetManager::GetModelSet(0)->model.materials[0];
+        material.shader = shader;
+
         int entityCount = 0;
         for (auto entity : transformView)
         {
             auto &transform = transformView.get<TransformComponent>(entity);
-            auto &model = transformView.get<ModelComponent>(entity);
-            Vector3 pos = (Vector3) {transform.X, transform.Y, transform.Z};
-            float distance = Vector3Distance(pos, camera.position);
 
-            ModelSet* modelSet = AssetManager::GetModelSet(model.ModelSetId);
-            Vector3 axis;
-            float angle;
-            QuaternionToAxisAngle(transform.Rotation, &axis, &angle);
-            if(entityCount == 0)
-            {
-                //std::cout << "Angle: " << angle << "\n";
-            }
-            //rlPushMatrix();
-            //Matrix mat = QuaternionToMatrix(transform.Rotation);
-            //rlMultMatrixf((float*)&mat);
-            if (distance < 0.05f * LodScalar)
-            {
-                //DrawModel(modelSet->model, pos, 1.0f, lodColors[0]);
-                DrawModelEx(modelSet->model, pos, axis, angle, Vector3{1.0f, 1.0f, 1.0f}, lodColors[0]);
-                TriangleCount += modelSet->model.meshes[0].triangleCount;
-                //rlPopMatrix();
-            }
-            else if (distance < 0.25f * LodScalar)
-            {
-                //DrawModel(modelSet->modelLod1, pos, 1.0f, lodColors[1]);
-                DrawModelEx(modelSet->modelLod1, pos, axis, angle, Vector3{1.0f, 1.0f, 1.0f}, lodColors[1]);
-                TriangleCount += modelSet->modelLod1.meshes[0].triangleCount;
-                //rlPopMatrix();
-            }
-            else if (distance < 2.0f * LodScalar)
-            {
-                //DrawModel(modelSet->modelLod2, pos, 1.0f, lodColors[2]);
-                DrawModelEx(modelSet->modelLod2, pos, axis, angle, Vector3{1.0f, 1.0f, 1.0f}, lodColors[2]);
-                TriangleCount += modelSet->modelLod2.meshes[0].triangleCount;
-                //rlPopMatrix();
-            }
-            else
-            {
-                //rlPopMatrix();
-                DrawBillboard(camera, modelSet->Billboard, pos, 7.0f, lodColors[3]);
-                TriangleCount += 2;
-            }
+            transform.Rotation.x += 0.00001f * (entityCount>>1);
+            //transform.Rotation.y += 0.01f;
+            //transform.Rotation.z += 0.02f;
+
+
+            transforms[entityCount] = MatrixMultiply(MatrixRotateXYZ(transform.Rotation),
+                                                     MatrixTranslate(transform.Translation.x,
+                                                                     transform.Translation.y,
+                                                                     transform.Translation.z));
 
             entityCount++;
         }
+
+
+
+        BeginDrawing();
+
+        ClearBackground(BLACK);
+
+        BeginMode3D(camera);
+
+        DrawMeshInstanced(AssetManager::GetModelSet(0)->modelLod2.meshes[0], material, transforms, MAX_INSTANCES);
 
         DrawGrid(10, 1.0f);
         EndMode3D();
@@ -140,17 +128,17 @@ class GraphicsSystem : public SystemBase {
             std::cout << "\n";
             std::cout << "     FPS: " << fps << "\n";
             std::cout << "    Tris: " << TriangleCount << "\n";
-            std::cout << "LOD Bias: " << LodScalar << "\n";
+            std::cout << "LOD Bias: " << LodBias << "\n";
         }
         if(FrameCount % 2 == 0)
         {
             if (fps < TargetFps - 2)
             {
-                LodScalar *= 0.999f;
+                LodBias *= 0.999f;
             }
             if (fps > TargetFps)
             {
-                LodScalar *= 1.01f;
+                LodBias *= 1.01f;
             }
         }
     }

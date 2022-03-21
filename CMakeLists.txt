@@ -8,16 +8,17 @@ set(CMAKE_BINARY_DIR ${CMAKE_SOURCE_DIR}/build)
 add_executable(Game
         main.cpp
         src/Engine/Core/AssetManager.cpp
-        )
+        src/Engine/Core/Systems/rlights.h)
 #add_executable(Game main.cpp)
 
 target_include_directories(Game
         PRIVATE
         "${CMAKE_SOURCE_DIR}/third_party/entt/src"
+        "${CMAKE_SOURCE_DIR}/src/Engine/Core/Systems/"
         "${CMAKE_SOURCE_DIR}/src")
 
 set(CUSTOMIZE_BUILD On)
-set(SUPPORT_FILEFORMAT_JPG On)
+set(SUPPORT_FILEFORMAT_JPG ON)
 add_subdirectory("${CMAKE_SOURCE_DIR}/third_party/raylib")
 set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE) # don't build the supplied examples
 set(BUILD_GAMES    OFF CACHE BOOL "" FORCE) # don't build the supplied example games

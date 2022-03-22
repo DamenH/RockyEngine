@@ -3,6 +3,7 @@
 #include "Engine/Core/SystemBase.h"
 #include "Engine/Core/Components/TranformComponent.h"
 #include "Engine/Core/Components/ModelComponent.h"
+#include "Engine/Core/Components/VisibilityComponent.h"
 
 #include <entt/entt.hpp>
 #include <raylib.h>
@@ -46,6 +47,7 @@ class GraphicsSystem : public SystemBase {
                                                  Vector3{0.0,0.0,0.0},
                                                  Vector3{1.0,1.0,1.0});
             registry.emplace<ModelComponent>(entity, 0);
+            registry.emplace<VisibilityComponent>(entity, 0);
         }
 
         shader = LoadShader(TextFormat("../media/Shaders/base_lighting_instanced.vs", 330),
@@ -65,7 +67,7 @@ class GraphicsSystem : public SystemBase {
     {
         int TriangleCount = 0;
 
-        auto transformView = registry.view<TransformComponent, ModelComponent>();
+        auto transformView = registry.view<TransformComponent, ModelComponent, VisibilityComponent>();
 
         auto cameraView = registry.view<CameraComponent, TransformComponent>();
         for (auto cameraEntity: cameraView) {
@@ -90,19 +92,26 @@ class GraphicsSystem : public SystemBase {
         int entityCount = 0;
         for (auto entity : transformView)
         {
-            auto &transform = transformView.get<TransformComponent>(entity);
+            auto &visibility = transformView.get<VisibilityComponent>(entity);
+            if(visibility.Level >= 0 && visibility.Level < INT_MAX) {
 
-            transform.Rotation.x += 0.00001f * (entityCount>>1);
-            //transform.Rotation.y += 0.01f;
-            //transform.Rotation.z += 0.02f;
+                if(visibility.Level >= 0 && visibility.Level < 3) {
+                    auto &transform = transformView.get<TransformComponent>(entity);
+
+                    transform.Rotation.x += 0.00001f * (entityCount >> 1);
+                    //transform.Rotation.y += 0.01f;
+                    //transform.Rotation.z += 0.02f;
 
 
-            transforms[entityCount] = MatrixMultiply(MatrixRotateXYZ(transform.Rotation),
-                                                     MatrixTranslate(transform.Translation.x,
-                                                                     transform.Translation.y,
-                                                                     transform.Translation.z));
+                    transforms[entityCount] = MatrixMultiply(MatrixRotateXYZ(transform.Rotation),
+                                                             MatrixTranslate(transform.Translation.x,
+                                                                             transform.Translation.y,
+                                                                             transform.Translation.z));
+                    entityCount++;
+                }
+            }
 
-            entityCount++;
+
         }
 
 
@@ -113,7 +122,7 @@ class GraphicsSystem : public SystemBase {
 
         BeginMode3D(camera);
 
-        DrawMeshInstanced(AssetManager::GetModelSet(0)->modelLod2.meshes[0], material, transforms, MAX_INSTANCES);
+        DrawMeshInstanced(AssetManager::GetModelSet(0)->modelLod2.meshes[0], material, transforms, entityCount);
 
         DrawGrid(10, 1.0f);
         EndMode3D();
@@ -126,6 +135,7 @@ class GraphicsSystem : public SystemBase {
         if(FrameCount == 0)
         {
             std::cout << "\n";
+            std::cout << "Entities: " << entityCount << "\n";
             std::cout << "     FPS: " << fps << "\n";
             std::cout << "    Tris: " << TriangleCount << "\n";
             std::cout << "LOD Bias: " << LodBias << "\n";

@@ -2,6 +2,7 @@
 #include "Systems/InputSystem.h"
 #include "Systems/TransformSystem.h"
 #include "Systems/GraphicsSystem.h"
+#include "Systems/VisibilitySystem.h"
 
 #include "Components/CameraComponent.h"
 #include "Components/TranformComponent.h"
@@ -23,7 +24,7 @@ void Application::setup() {
                    FLAG_WINDOW_RESIZABLE
                    //FLAG_FULLSCREEN_MODE
     );
-    InitWindow(1920, 1080, "Rocky Engine - Raylib Edition");
+    InitWindow(1920, 1080, "Rocky Engine");
     AssetManager::Load();
 
     // Create camera entity
@@ -65,10 +66,12 @@ void Application::Run() {
     InputSystem inputSystem;
     TransformSystem transformSystem;
     GraphicsSystem graphicsSystem;
+    VisibilitySystem visibilitySystem;
 
     RegisterSystem(&inputSystem);
     RegisterSystem(&transformSystem);
     RegisterSystem(&graphicsSystem);
+    RegisterSystem(&visibilitySystem);
 
     InitializeSystems();
 

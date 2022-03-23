@@ -20,8 +20,6 @@ class TransformSystem : public SystemBase {
 
         for (auto entity: transformView) {
             auto &transform = transformView.get<TransformComponent>(entity);
-
-            transform.Rotation = QuaternionMultiply(transform.Rotation, QuaternionFromEuler(0.0f, 0.2f, 0.1f));
         }
     }
 };

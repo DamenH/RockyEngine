@@ -46,8 +46,8 @@ class FreeCameraSystem : public SystemBase {
 */
             auto translationLeft = (float) ((input.RightPressed * 0.1) - (input.LeftPressed * 0.1));
             auto translationForward = (float) ((input.BackPressed * 0.1) - (input.ForwardPressed * 0.1));
-            cameraTransform.Z += translationForward;
-            cameraTransform.X += translationLeft;
+            cameraTransform.Translation.z += translationForward;
+            cameraTransform.Translation.x += translationLeft;
         }
     }
 };

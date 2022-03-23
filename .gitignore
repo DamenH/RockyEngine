@@ -1,9 +1,17 @@
+.idea
+.vscode
 
-vcpkg_installed
-
-build/*
-!build/*.cfg
-
-setup
+cmake-build-debug
 
 lib
+
+build
+CMakeFiles
+Makefile
+cmake_install.cmake
+CMakeCache.txt
+CPackConfig.cmake
+CPackSourceConfig.cmake
+
+third_party
+media

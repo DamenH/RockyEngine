@@ -10,6 +10,7 @@
 #include <raymath.h>
 #include <iostream>
 #include <stdlib.h>
+#include <vector>
 #include <rlgl.h>
 #define RLIGHTS_IMPLEMENTATION
 #include "rlights.h"
@@ -22,6 +23,9 @@ class GraphicsSystem : public SystemBase {
     uint8_t FrameCount = 0;
     float fps = 60;
     Shader shader;
+
+    std::vector<int> models;
+    std::vector<Matrix*> transformArrays;
 
     void OnStartup(entt::registry &registry) override
     {

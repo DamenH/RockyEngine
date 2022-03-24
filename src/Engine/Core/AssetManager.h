@@ -3,24 +3,28 @@
 #include <raylib.h>
 
 struct ModelSet {
-    Model model;
-    Model modelLod1;
-    Model modelLod2;
-    Texture2D Billboard;
+    int model;
+    int modelLod1;
+    int modelLod2;
+    int Billboard;
 };
 
 class AssetManager {
 public:
-    //static ModelSet modelSets[128];
-    //static int modelSetCount;
     AssetManager();
 
     static void Load();
 
     static ModelSet *GetModelSet(int index);
 
-    static void
+    static Model *GetModel(int index);
+
+    static int
     loadModelSet(char *meshFile, char *meshFileLod1, char *meshFileLod2, char *textureFile, char *billboardFile);
+
+    static int loadModel(char *meshFile, char *textureFile);
+
+    static int loadBillboard(char *billboardFile);
 
 };
 

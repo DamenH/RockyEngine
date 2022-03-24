@@ -4,7 +4,12 @@
 #include <unistd.h>
 
 ModelSet modelSets[128];
+Model models[128];
+Texture2D billboards[128];
+
 int modelSetCount = 0;
+int modelCount = 0;
+int billboardCount = 0;
 
 AssetManager::AssetManager() {
 }
@@ -28,27 +33,40 @@ void AssetManager::Load() {
     std::cout << "Done" << std::endl;
 }
 
-void AssetManager::loadModelSet(char *meshFile, char *meshFileLod1, char *meshFileLod2, char *textureFile,
+
+
+int AssetManager::loadModelSet(char *meshFile, char *meshFileLod1, char *meshFileLod2, char *textureFile,
                                 char *billboardFile) {
+    ModelSet set;
+    set.model = loadModel(meshFile, textureFile);;
+    set.modelLod1 = loadModel(meshFileLod1, textureFile);
+    set.modelLod2 = loadModel(meshFileLod2, textureFile);
+    set.Billboard = loadBillboard(billboardFile);
+
+    modelSets[modelSetCount] = set;
+    int id = modelSetCount;
+    modelSetCount++;
+    return id;
+}
+
+int AssetManager::loadModel(char *meshFile, char *textureFile){
     Model model = LoadModel(meshFile);
-    Model model1 = LoadModel(meshFileLod1);
-    Model model2 = LoadModel(meshFileLod2);
     Texture2D texture = LoadTexture(textureFile);
     GenTextureMipmaps(&texture);
     model.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = texture;
-    model1.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = texture;
-    model2.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = texture;
+
+    models[modelCount] = model;
+    int id = modelCount;
+    modelCount++;
+    return id;
+}
+
+int AssetManager::loadBillboard(char *billboardFile){
     Texture2D billboard = LoadTexture(billboardFile);
     GenTextureMipmaps(&billboard);
-
-    ModelSet set;
-    set.model = model;
-    set.modelLod1 = model1;
-    set.modelLod2 = model2;
-    set.Billboard = billboard;
-
-    modelSets[modelSetCount] = set;
-
-    modelSetCount++;
+    billboards[billboardCount] = billboard;
+    int id = billboardCount;
+    billboardCount++;
+    return id;
 }
 

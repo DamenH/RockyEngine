@@ -15,25 +15,17 @@ class InputSystem : public SystemBase {
     }
 
     void OnUpdate(entt::registry &registry) override {
-        // Get key states
-        const Uint8 *keyStates = SDL_GetKeyboardState(nullptr);
 
-        // Get relative mouse deltas
-        int32_t MouseDeltaX, MouseDeltaY;
-        SDL_GetRelativeMouseState(&MouseDeltaX, &MouseDeltaY);
-
-        // TODO understand why this is called a view and not a filter
         auto inputView = registry.view<InputComponent>();
 
         auto &input = inputView.get<InputComponent>(inputView[0]);
 
-        input.ForwardPressed = !!keyStates[SDL_SCANCODE_W];
-        input.BackPressed = !!keyStates[SDL_SCANCODE_S];
-        input.LeftPressed = !!keyStates[SDL_SCANCODE_A];
-        input.RightPressed = !!keyStates[SDL_SCANCODE_D];
+        input.ForwardPressed = IsKeyDown('W');
+        input.BackPressed = IsKeyDown('S');
+        input.LeftPressed = IsKeyDown('A');
+        input.RightPressed = IsKeyDown('D');
 
-        input.MouseDeltaX = MouseDeltaX;
-        input.MouseDeltaY = MouseDeltaY;
+        input.MouseDelta = GetMouseDelta();
 
     }
 };

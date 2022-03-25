@@ -11,7 +11,9 @@
 #include <iostream>
 #include <stdlib.h>
 #include <rlgl.h>
+
 #define RLIGHTS_IMPLEMENTATION
+
 #include "rlights.h"
 
 
@@ -23,8 +25,7 @@ class GraphicsSystem : public SystemBase {
     float fps = 60;
     Shader shader;
 
-    void OnStartup(entt::registry &registry) override
-    {
+    void OnStartup(entt::registry &registry) override {
         camera = {0};
         camera.position = (Vector3) {0.0f, 10.0f, 0.0f}; // Camera position
         camera.target = (Vector3) {0.0f, 0.0f, 0.0f};    // Camera looking at point
@@ -43,15 +44,15 @@ class GraphicsSystem : public SystemBase {
             float z = ((rand() - rand()) / (float) RAND_MAX) * scalar;
 
             registry.emplace<TransformComponent>(entity,
-                                                 Vector3{x,y,z},
-                                                 Vector3{0.0,0.0,0.0},
-                                                 Vector3{1.0,1.0,1.0});
+                                                 Vector3{x, y, z},
+                                                 Vector3{0.0, 0.0, 0.0},
+                                                 Vector3{1.0, 1.0, 1.0});
             registry.emplace<ModelComponent>(entity, 0);
             registry.emplace<VisibilityComponent>(entity, 0);
         }
 
         shader = LoadShader(TextFormat("../media/Shaders/base_lighting_instanced.vs", 330),
-                                   TextFormat("../media/Shaders/lighting.fs", 330));
+                            TextFormat("../media/Shaders/lighting.fs", 330));
         // Get some shader locations
         shader.locs[SHADER_LOC_MATRIX_MVP] = GetShaderLocation(shader, "mvp");
         shader.locs[SHADER_LOC_VECTOR_VIEW] = GetShaderLocation(shader, "viewPos");
@@ -59,12 +60,11 @@ class GraphicsSystem : public SystemBase {
 
         // Ambient light level
         int ambientLoc = GetShaderLocation(shader, "ambient");
-        float ambient[4] = { 0.2f, 0.2f, 0.2f, 1.0f };
+        float ambient[4] = {0.2f, 0.2f, 0.2f, 1.0f};
         SetShaderValue(shader, ambientLoc, ambient, SHADER_UNIFORM_VEC4);
     }
 
-    void OnUpdate(entt::registry &registry) override
-    {
+    void OnUpdate(entt::registry &registry) override {
         int TriangleCount = 0;
 
         auto transformView = registry.view<TransformComponent, ModelComponent, VisibilityComponent>();
@@ -73,16 +73,34 @@ class GraphicsSystem : public SystemBase {
         for (auto cameraEntity: cameraView) {
             auto &cameraTransform = cameraView.get<TransformComponent>(cameraEntity);
             // TODO Update RayLib camera transform
-            UpdateCamera(&camera);
+//            UpdateCamera(&camera);
+
+            camera.position.x = cameraTransform.Translation.x;
+            camera.position.y = cameraTransform.Translation.y;
+            camera.position.z = cameraTransform.Translation.z;
+
+            camera.target = Vector3Multiply({1, 1, 1},
+                                            Vector3Add(
+                                                    cameraTransform.Translation,
+                                                    cameraTransform.Rotation
+                                            )
+            );
+
+//            if (FrameCount == 0) {
+//                std::cout << cameraTransform.Rotation.x << " " << cameraTransform.Rotation.y << " "
+//                          << cameraTransform.Rotation.z << std::endl;
+//            }
+
         }
 
         int MAX_INSTANCES = transformView.size_hint();
-        Matrix *transforms = (Matrix*)malloc(MAX_INSTANCES*sizeof(Matrix));   // Pre-multiplied transformations passed to rlgl
+        Matrix *transforms = (Matrix *) malloc(
+                MAX_INSTANCES * sizeof(Matrix));   // Pre-multiplied transformations passed to rlgl
 
 
 
 
-        CreateLight(LIGHT_DIRECTIONAL, (Vector3){ 50.0f, 50.0f, 0.0f }, Vector3Zero(), WHITE, shader);
+        CreateLight(LIGHT_DIRECTIONAL, (Vector3) {50.0f, 50.0f, 0.0f}, Vector3Zero(), WHITE, shader);
 
         // NOTE: We are assigning the intancing shader to material.shader
         // to be used on mesh drawing with DrawMeshInstanced()
@@ -90,12 +108,11 @@ class GraphicsSystem : public SystemBase {
         material.shader = shader;
 
         int entityCount = 0;
-        for (auto entity : transformView)
-        {
+        for (auto entity: transformView) {
             auto &visibility = transformView.get<VisibilityComponent>(entity);
-            if(visibility.Level >= 0 && visibility.Level < INT_MAX) {
+            if (visibility.Level >= 0 && visibility.Level < INT_MAX) {
 
-                if(visibility.Level >= 0 && visibility.Level < 3) {
+                if (visibility.Level >= 0 && visibility.Level < 3) {
                     auto &transform = transformView.get<TransformComponent>(entity);
 
                     transform.Rotation.x += 0.00001f * (entityCount >> 1);
@@ -115,7 +132,6 @@ class GraphicsSystem : public SystemBase {
         }
 
 
-
         BeginDrawing();
 
         ClearBackground(BLACK);
@@ -132,22 +148,18 @@ class GraphicsSystem : public SystemBase {
         fps = ((3.0f * fps) + GetFPS()) / 4.0f;
 
         FrameCount++;
-        if(FrameCount == 0)
-        {
+        if (FrameCount == 0) {
             std::cout << "\n";
             std::cout << "Entities: " << entityCount << "\n";
             std::cout << "     FPS: " << fps << "\n";
             std::cout << "    Tris: " << TriangleCount << "\n";
             std::cout << "LOD Bias: " << LodBias << "\n";
         }
-        if(FrameCount % 2 == 0)
-        {
-            if (fps < TargetFps - 2)
-            {
+        if (FrameCount % 2 == 0) {
+            if (fps < TargetFps - 2) {
                 LodBias *= 0.999f;
             }
-            if (fps > TargetFps)
-            {
+            if (fps > TargetFps) {
                 LodBias *= 1.01f;
             }
         }

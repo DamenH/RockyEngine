@@ -19,10 +19,7 @@
 class GraphicsSystem : public SystemBase
 {
     Camera3D camera;
-    float LodBias = 100.0f;
-    int TargetFps = 60;
     uint8_t FrameCount = 0;
-    float fps = 60;
     Shader shader;
 
     std::vector<int> models;
@@ -172,8 +169,6 @@ class GraphicsSystem : public SystemBase
 
         EndDrawing();
 
-        fps = ((3.0f * fps) + GetFPS()) / 4.0f;
-
         FrameCount++;
         if (FrameCount == 0)
         {
@@ -184,20 +179,8 @@ class GraphicsSystem : public SystemBase
             {
                 std::cout << "\tID: " << i << ",\t" << transformArrays[i].size() << "\n";
             }
-            std::cout << "     FPS: " << fps << "\n";
+            std::cout << "     FPS: " << GetFPS() << "\n";
             std::cout << "    Tris: " << TriangleCount << "\n";
-            std::cout << "LOD Bias: " << LodBias << "\n";
-        }
-        if (FrameCount % 2 == 0)
-        {
-            if (fps < TargetFps - 2)
-            {
-                LodBias *= 0.999f;
-            }
-            if (fps > TargetFps)
-            {
-                LodBias *= 1.01f;
-            }
         }
     }
 };

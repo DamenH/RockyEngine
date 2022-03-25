@@ -18,6 +18,10 @@ ModelSet *AssetManager::GetModelSet(int index) {
     return &modelSets[index];
 }
 
+Model *AssetManager::GetModel(int index) {
+    return &models[index];
+}
+
 void AssetManager::Load() {
     char cwd[256];
     getcwd(cwd, 256);

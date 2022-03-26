@@ -25,6 +25,11 @@ class GraphicsSystem : public SystemBase
     std::vector<int> models;
     std::vector<std::vector<Matrix>> transformArrays;
 
+    RenderTexture2D renderTex;
+    Rectangle sourceRect;
+    Rectangle destRect;
+    Vector2 Origin;
+
     void OnStartup(entt::registry &registry) override
     {
         camera = {0};
@@ -64,6 +69,16 @@ class GraphicsSystem : public SystemBase
         int ambientLoc = GetShaderLocation(shader, "ambient");
         float ambient[4] = {0.2f, 0.2f, 0.2f, 1.0f};
         SetShaderValue(shader, ambientLoc, ambient, SHADER_UNIFORM_VEC4);
+
+        destRect.width = 1920;
+        destRect.height = 1080;
+        destRect.x = 0;
+        destRect.y = 0;
+        renderTex = LoadRenderTexture(destRect.width, destRect.height);
+        sourceRect.width = renderTex.texture.width;
+        sourceRect.height = -renderTex.texture.height;
+        sourceRect.x = 0;
+        sourceRect.y = 0;
     }
 
     void OnUpdate(entt::registry &registry) override
@@ -105,7 +120,7 @@ class GraphicsSystem : public SystemBase
                 auto &model = transformView.get<ModelComponent>(entity);
 
                 // Update Transform (Temporary code, Userland concern)
-                transform.Rotation.x += 0.00001f * (entityCount >> 1);
+                transform.Rotation.y += 0.00001f * (entityCount >> 1);
                 // transform.Rotation.y += 0.01f;
                 // transform.Rotation.z += 0.02f;
 
@@ -138,9 +153,16 @@ class GraphicsSystem : public SystemBase
                 else
                 {
                     models.push_back(modelId);
-                    std::vector<Matrix> newBin;
-                    transformArrays.push_back(newBin);
-                    newBin.push_back(transformMatrix);
+                    if(transformArrays.size() < models.size())
+                    {
+                        std::vector<Matrix> newBin;
+                        transformArrays.push_back(newBin);
+                        newBin.push_back(transformMatrix);
+                    }
+                    else
+                    {
+                        transformArrays[std::distance(models.begin(), bin)].push_back(transformMatrix);
+                    }
                 }
 
                 entityCount++;
@@ -149,7 +171,10 @@ class GraphicsSystem : public SystemBase
 
         BeginDrawing();
 
-        ClearBackground(BLACK);
+        
+        BeginTextureMode(renderTex);
+
+        ClearBackground(BLANK);
 
         BeginMode3D(camera);
 
@@ -160,6 +185,7 @@ class GraphicsSystem : public SystemBase
             Matrix *array = transformArrays[i].data();
             // std::cout << "Drawing batch " << i << ", model " << models[i] << ", " << transformArrays[i].size() << " entities";
             DrawMeshInstanced(AssetManager::GetModel(models[i])->meshes[0], material, array, transformArrays[i].size());
+            TriangleCount += AssetManager::GetModel(models[i])->meshes[0].triangleCount * transformArrays[i].size();
             // std::cout << ".\n";
         }
         // std::cout << "Done drawing batches\n";
@@ -167,10 +193,15 @@ class GraphicsSystem : public SystemBase
         DrawGrid(10, 1.0f);
         EndMode3D();
 
+        EndTextureMode();
+
+        BeginDrawing();
+        ClearBackground(BLACK);
+        DrawTexturePro(renderTex.texture, sourceRect, destRect, Origin, 0.0f, WHITE); 
         EndDrawing();
 
         FrameCount++;
-        if (FrameCount == 0)
+        if (FrameCount % 60 == 0)
         {
             std::cout << "\n";
             std::cout << "Entities: " << entityCount << "\n";

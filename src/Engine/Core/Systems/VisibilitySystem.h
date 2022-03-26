@@ -4,6 +4,7 @@
 #include "Engine/Core/Components/TranformComponent.h"
 #include "Engine/Core/Components/ModelComponent.h"
 #include "Engine/Core/Components/VisibilityComponent.h"
+#include "Engine/Core/Components/CameraComponent.h"
 
 #include <entt/entt.hpp>
 #include <raylib.h>

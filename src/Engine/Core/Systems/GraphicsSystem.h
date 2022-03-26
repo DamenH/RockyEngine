@@ -94,13 +94,7 @@ class GraphicsSystem : public SystemBase
 
         auto transformView = registry.view<TransformComponent, ModelComponent, VisibilityComponent>();
 
-        auto cameraView = registry.view<CameraComponent, TransformComponent>();
-        for (auto cameraEntity : cameraView)
-        {
-            auto &cameraTransform = cameraView.get<TransformComponent>(cameraEntity);
-            // TODO Update RayLib camera transform
-            UpdateCamera(&camera);
-        }
+        UpdateCamera(&camera);
 
         
 

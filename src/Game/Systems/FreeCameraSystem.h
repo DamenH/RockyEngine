@@ -16,7 +16,7 @@ class FreeCameraSystem : public SystemBase {
     }
 
     void OnUpdate(entt::registry &registry) override {
-
+/*
         // TODO understand why this is called a view and not a filter
         auto inputView = registry.view<InputComponent>();
         auto &input = inputView.get<InputComponent>(inputView[0]);
@@ -43,11 +43,11 @@ class FreeCameraSystem : public SystemBase {
             cameraOrientation = cameraOrientation * pitch;
 
             cameraTransform.rotation = cameraOrientation;
-*/
+*//*
             auto translationLeft = (float) ((input.RightPressed * 0.1) - (input.LeftPressed * 0.1));
             auto translationForward = (float) ((input.BackPressed * 0.1) - (input.ForwardPressed * 0.1));
             cameraTransform.Translation.z += translationForward;
             cameraTransform.Translation.x += translationLeft;
-        }
+        }*/
     }
 };

@@ -16,6 +16,8 @@
 #define RLIGHTS_IMPLEMENTATION
 #include "rlights.h"
 
+//#define RENDER_TO_TEXTURE
+
 class GraphicsSystem : public SystemBase
 {
     Camera3D camera;
@@ -25,10 +27,12 @@ class GraphicsSystem : public SystemBase
     std::vector<int> models;
     std::vector<std::vector<Matrix>> transformArrays;
 
+#ifdef RENDER_TO_TEXTURE
     RenderTexture2D renderTex;
     Rectangle sourceRect;
     Rectangle destRect;
     Vector2 Origin;
+#endif
 
     void OnStartup(entt::registry &registry) override
     {
@@ -69,7 +73,9 @@ class GraphicsSystem : public SystemBase
         int ambientLoc = GetShaderLocation(shader, "ambient");
         float ambient[4] = {0.2f, 0.2f, 0.2f, 1.0f};
         SetShaderValue(shader, ambientLoc, ambient, SHADER_UNIFORM_VEC4);
+        CreateLight(LIGHT_DIRECTIONAL, (Vector3){50.0f, 50.0f, 0.0f}, Vector3Zero(), WHITE, shader);
 
+#ifdef RENDER_TO_TEXTURE
         destRect.width = 1920;
         destRect.height = 1080;
         destRect.x = 0;
@@ -79,6 +85,7 @@ class GraphicsSystem : public SystemBase
         sourceRect.height = -renderTex.texture.height;
         sourceRect.x = 0;
         sourceRect.y = 0;
+#endif
     }
 
     void OnUpdate(entt::registry &registry) override
@@ -95,19 +102,14 @@ class GraphicsSystem : public SystemBase
             UpdateCamera(&camera);
         }
 
-        CreateLight(LIGHT_DIRECTIONAL, (Vector3){50.0f, 50.0f, 0.0f}, Vector3Zero(), WHITE, shader);
+        
 
         // NOTE: We are assigning the intancing shader to material.shader
         // to be used on mesh drawing with DrawMeshInstanced()
         Material material = AssetManager::GetModel(0)->materials[0];
         material.shader = shader;
 
-        models.clear();
-        for (int i = 0; i < transformArrays.size(); i++)
-        {
-            transformArrays[i].clear();
-        }
-        //transformArrays.clear();
+        
 
         int entityCount = 0;
         for (auto entity : transformView)
@@ -120,7 +122,7 @@ class GraphicsSystem : public SystemBase
                 auto &model = transformView.get<ModelComponent>(entity);
 
                 // Update Transform (Temporary code, Userland concern)
-                transform.Rotation.y += 0.00001f * (entityCount >> 1);
+                transform.Rotation.x += 0.00001f * (entityCount >> 1);
                 // transform.Rotation.y += 0.01f;
                 // transform.Rotation.z += 0.02f;
 
@@ -153,7 +155,7 @@ class GraphicsSystem : public SystemBase
                 else
                 {
                     models.push_back(modelId);
-                    if(transformArrays.size() < models.size())
+                    if (transformArrays.size() < models.size())
                     {
                         std::vector<Matrix> newBin;
                         transformArrays.push_back(newBin);
@@ -171,33 +173,34 @@ class GraphicsSystem : public SystemBase
 
         BeginDrawing();
 
-        
+#ifdef RENDER_TO_TEXTURE
         BeginTextureMode(renderTex);
-
         ClearBackground(BLANK);
+#endif
+#ifndef RENDER_TO_TEXTURE
+        ClearBackground(BLACK);
+#endif
 
         BeginMode3D(camera);
 
-        // DrawMeshInstanced(AssetManager::GetModel(0)->meshes[0], material, transforms, entityCount);
-        // std::cout << "Drawing "<< models.size() <<" batches\n";
         for (int i = 0; i < models.size(); i++)
         {
             Matrix *array = transformArrays[i].data();
-            // std::cout << "Drawing batch " << i << ", model " << models[i] << ", " << transformArrays[i].size() << " entities";
             DrawMeshInstanced(AssetManager::GetModel(models[i])->meshes[0], material, array, transformArrays[i].size());
             TriangleCount += AssetManager::GetModel(models[i])->meshes[0].triangleCount * transformArrays[i].size();
-            // std::cout << ".\n";
         }
-        // std::cout << "Done drawing batches\n";
 
         DrawGrid(10, 1.0f);
+        
         EndMode3D();
-
+#ifdef RENDER_TO_TEXTURE
         EndTextureMode();
-
         BeginDrawing();
         ClearBackground(BLACK);
-        DrawTexturePro(renderTex.texture, sourceRect, destRect, Origin, 0.0f, WHITE); 
+        DrawTexturePro(renderTex.texture, sourceRect, destRect, Origin, 0.0f, WHITE);
+#endif
+
+        DrawFPS(10,10);
         EndDrawing();
 
         FrameCount++;
@@ -212,6 +215,12 @@ class GraphicsSystem : public SystemBase
             }
             std::cout << "     FPS: " << GetFPS() << "\n";
             std::cout << "    Tris: " << TriangleCount << "\n";
+        }
+
+        models.clear();
+        for (int i = 0; i < transformArrays.size(); i++)
+        {
+            transformArrays[i].clear();
         }
     }
 };

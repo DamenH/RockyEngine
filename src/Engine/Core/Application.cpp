@@ -7,7 +7,6 @@
 #include "Components/CameraComponent.h"
 #include "Components/TranformComponent.h"
 
-#include <SDL2/SDL.h>
 #include <entt/entt.hpp>
 #include <raylib.h>
 #include <iostream>
@@ -28,9 +27,9 @@ void Application::setup() {
     AssetManager::Load();
 
     // Create camera entity
-    auto entity = registry.create();
-    registry.emplace<CameraComponent>(entity);
-    registry.emplace<TransformComponent>(entity, 0, 0, 25);
+    //auto entity = registry.create();
+    //registry.emplace<CameraComponent>(entity);
+    //registry.emplace<TransformComponent>(entity, 0, 0, 25);
 }
 
 void Application::RegisterSystem(SystemBase *system) {
@@ -57,10 +56,6 @@ void Application::Run() {
 
     std::cout << "Running\n";
 
-    SDL_SetHintWithPriority(SDL_HINT_MOUSE_RELATIVE_MODE_WARP, "1", SDL_HINT_OVERRIDE);
-    SDL_SetRelativeMouseMode(SDL_TRUE);
-
-    const Uint8 *keyStates = SDL_GetKeyboardState(nullptr);
     bool quit = false;
 
     InputSystem inputSystem;
@@ -77,31 +72,11 @@ void Application::Run() {
 
     std::cout << "Entering Main Loop\n";
     while (!quit) {
-        SDL_PumpEvents();
-
-        if (keyStates[SDL_SCANCODE_ESCAPE]) {
-            SDL_SetRelativeMouseMode(SDL_FALSE);
-        }
-
-        /*if (SDL_GetRelativeMouseMode())
-        {
-            UpdateSystems();
-        }*/
 
         UpdateSystems();
-
-        SDL_Event event;
-        while (SDL_PollEvent(&event)) {
-            switch (event.type) {
-                case SDL_QUIT:
-                    quit = true;
-                    break;
-            }
-        }
 
         if (!quit) {
             quit = WindowShouldClose();
         }
     }
-    SDL_Quit();
 }

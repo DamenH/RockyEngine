@@ -12,7 +12,7 @@
 class VisibilitySystem : public SystemBase {
     float fps = 60;
     int TargetFps = 60;
-    float LodBias = 100.0f;
+    float LodBias = 1.0f;
 
     bool InFrustum(TransformComponent transform)
     {

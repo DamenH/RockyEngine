@@ -16,6 +16,9 @@
 #define RLIGHTS_IMPLEMENTATION
 #include "rlights.h"
 
+#include "rlImGui.h"
+#include "imgui.h"
+
 //#define RENDER_TO_TEXTURE
 
 class GraphicsSystem : public SystemBase
@@ -28,6 +31,7 @@ class GraphicsSystem : public SystemBase
     std::vector<std::vector<Matrix>> transformArrays;
 
 #ifdef RENDER_TO_TEXTURE
+    bool RenderToTexture = true;
     RenderTexture2D renderTex;
     Rectangle sourceRect;
     Rectangle destRect;
@@ -86,6 +90,7 @@ class GraphicsSystem : public SystemBase
         sourceRect.x = 0;
         sourceRect.y = 0;
 #endif
+        rlImGuiSetup(true); // sets up ImGui with ether a dark or light default theme
     }
 
     void OnUpdate(entt::registry &registry) override
@@ -96,14 +101,10 @@ class GraphicsSystem : public SystemBase
 
         UpdateCamera(&camera);
 
-        
-
         // NOTE: We are assigning the intancing shader to material.shader
         // to be used on mesh drawing with DrawMeshInstanced()
         Material material = AssetManager::GetModel(0)->materials[0];
         material.shader = shader;
-
-        
 
         int entityCount = 0;
         for (auto entity : transformView)
@@ -168,11 +169,18 @@ class GraphicsSystem : public SystemBase
         BeginDrawing();
 
 #ifdef RENDER_TO_TEXTURE
-        BeginTextureMode(renderTex);
-        ClearBackground(BLANK);
+        if (RenderToTexture)
+        {
+            BeginTextureMode(renderTex);
+            ClearBackground(BLANK);
+        }
+        else
+        {
 #endif
-#ifndef RENDER_TO_TEXTURE
-        ClearBackground(BLACK);
+
+            ClearBackground(BLACK);
+#ifdef RENDER_TO_TEXTURE
+        }
 #endif
 
         BeginMode3D(camera);
@@ -185,31 +193,40 @@ class GraphicsSystem : public SystemBase
         }
 
         DrawGrid(10, 1.0f);
-        
+
         EndMode3D();
 #ifdef RENDER_TO_TEXTURE
-        EndTextureMode();
-        BeginDrawing();
-        ClearBackground(BLACK);
-        DrawTexturePro(renderTex.texture, sourceRect, destRect, Origin, 0.0f, WHITE);
+        if (RenderToTexture)
+        {
+            EndTextureMode();
+            BeginDrawing();
+            ClearBackground(BLACK);
+            DrawTexturePro(renderTex.texture, sourceRect, destRect, Origin, 0.0f, WHITE);
+        }
 #endif
+        rlImGuiBegin();
+        bool open = false;
+        ImGui::ShowDemoWindow(&open);
 
-        DrawFPS(10,10);
+        ImGui::Begin("GraphicsSystem");
+#ifdef RENDER_TO_TEXTURE
+        ImGui::Checkbox("Use Render Buffers", &RenderToTexture);
+#endif
+        ImGui::Text("Drawn Entities: %d", entityCount);
+        ImGui::Text("Triangles: %d", TriangleCount);
+        ImGui::Text("FPS: %d", GetFPS());
+        ImGui::Text("Draw Batches: %d", models.size());
+        for (int i = 0; i < models.size(); i++)
+        {
+            ImGui::Text("\tID: %d, %d", i, transformArrays[i].size());
+        }
+        ImGui::End();
+        rlImGuiEnd();
+
+        DrawFPS(10, 10);
         EndDrawing();
 
         FrameCount++;
-        if (FrameCount % 60 == 0)
-        {
-            std::cout << "\n";
-            std::cout << "Entities: " << entityCount << "\n";
-            std::cout << " Batches: " << models.size() << "\n";
-            for (int i = 0; i < models.size(); i++)
-            {
-                std::cout << "\tID: " << i << ",\t" << transformArrays[i].size() << "\n";
-            }
-            std::cout << "     FPS: " << GetFPS() << "\n";
-            std::cout << "    Tris: " << TriangleCount << "\n";
-        }
 
         models.clear();
         for (int i = 0; i < transformArrays.size(); i++)

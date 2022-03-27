@@ -4,6 +4,7 @@
 #include "Engine/Core/Components/TranformComponent.h"
 #include "Engine/Core/Components/ModelComponent.h"
 #include "Engine/Core/Components/VisibilityComponent.h"
+#include "Engine/Core/Components/CameraComponent.h"
 
 #include <entt/entt.hpp>
 #include <raylib.h>
@@ -11,8 +12,8 @@
 
 class VisibilitySystem : public SystemBase {
     float fps = 60;
-    int TargetFps = 60;
-    float LodBias = 1.0f;
+    int TargetFps = 120;
+    float LodBias = 100.0f;
 
     bool InFrustum(TransformComponent transform)
     {
@@ -39,19 +40,19 @@ class VisibilitySystem : public SystemBase {
                 continue;
             }
 
-            if(Vector3Distance(transform.Translation, (Vector3){0,0,0}) < (1 * LodBias))
+            if(Vector3Distance(transform.Translation, (Vector3){0,0,0}) < (1.0f * LodBias))
             {
                 visibility.Level = 0;
                 continue;
             }
 
-            if(Vector3Distance(transform.Translation, (Vector3){0,0,0}) < (2 * LodBias))
+            if(Vector3Distance(transform.Translation, (Vector3){0,0,0}) < (2.0f * LodBias))
             {
                 visibility.Level = 1;
                 continue;
             }
 
-            if(Vector3Distance(transform.Translation, (Vector3){0,0,0}) < (5 * LodBias))
+            if(Vector3Distance(transform.Translation, (Vector3){0,0,0}) < (5.0f * LodBias))
             {
                 visibility.Level = 2;
                 continue;
@@ -61,13 +62,15 @@ class VisibilitySystem : public SystemBase {
         }
 
         fps = ((3.0f * fps) + GetFPS()) / 4.0f;
-        if (fps < TargetFps - 2)
+        if (fps < TargetFps)
         {
             LodBias *= 0.999f;
+            //std::cout << "FPS:" << fps <<"/"<<TargetFps << "\t" << "v" << LodBias << "\n";
         }
-        if (fps > TargetFps)
+        if (fps > TargetFps + 10)
         {
-            LodBias *= 1.01f;
+            LodBias *= 1.001f;
+            //std::cout << "FPS:" << fps <<"/"<<TargetFps << "\t" << "^" << LodBias << "\n";
         }
     }
 };

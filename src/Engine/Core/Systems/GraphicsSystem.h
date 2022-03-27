@@ -18,16 +18,30 @@
 
 #include "rlights.h"
 
+#include "rlImGui.h"
+#include "imgui.h"
+
+//#define RENDER_TO_TEXTURE
+
 class GraphicsSystem : public SystemBase
 {
     Camera3D camera;
-    float LodBias = 100.0f;
-    int TargetFps = 60;
     uint8_t FrameCount = 0;
-    float fps = 60;
     Shader shader;
 
-    void OnStartup(entt::registry &registry) override {
+    std::vector<int> models;
+    std::vector<std::vector<Matrix>> transformArrays;
+
+#ifdef RENDER_TO_TEXTURE
+    bool RenderToTexture = true;
+    RenderTexture2D renderTex;
+    Rectangle sourceRect;
+    Rectangle destRect;
+    Vector2 Origin;
+#endif
+
+    void OnStartup(entt::registry &registry) override
+    {
         camera = {0};
         camera.position = (Vector3){0.0f, 10.0f, 0.0f}; // Camera position
         camera.target = (Vector3){0.0f, 0.0f, 0.0f};    // Camera looking at point
@@ -65,6 +79,20 @@ class GraphicsSystem : public SystemBase
         int ambientLoc = GetShaderLocation(shader, "ambient");
         float ambient[4] = {0.2f, 0.2f, 0.2f, 1.0f};
         SetShaderValue(shader, ambientLoc, ambient, SHADER_UNIFORM_VEC4);
+        CreateLight(LIGHT_DIRECTIONAL, (Vector3){50.0f, 50.0f, 0.0f}, Vector3Zero(), WHITE, shader);
+
+#ifdef RENDER_TO_TEXTURE
+        destRect.width = 1920;
+        destRect.height = 1080;
+        destRect.x = 0;
+        destRect.y = 0;
+        renderTex = LoadRenderTexture(destRect.width, destRect.height);
+        sourceRect.width = renderTex.texture.width;
+        sourceRect.height = -renderTex.texture.height;
+        sourceRect.x = 0;
+        sourceRect.y = 0;
+#endif
+        rlImGuiSetup(true); // sets up ImGui with ether a dark or light default theme
     }
 
     void OnUpdate(entt::registry &registry) override {
@@ -72,52 +100,12 @@ class GraphicsSystem : public SystemBase
 
         auto transformView = registry.view<TransformComponent, ModelComponent, VisibilityComponent>();
 
-        auto cameraView = registry.view<CameraComponent, TransformComponent>();
-        for (auto cameraEntity : cameraView)
-        {
-            auto &cameraTransform = cameraView.get<TransformComponent>(cameraEntity);
-            // TODO Update RayLib camera transform
-//            UpdateCamera(&camera);
-
-            camera.position.x = cameraTransform.Translation.x;
-            camera.position.y = cameraTransform.Translation.y;
-            camera.position.z = cameraTransform.Translation.z;
-
-            Quaternion orientation = QuaternionFromEuler(cameraTransform.Rotation.x, cameraTransform.Rotation.y,
-                                                         cameraTransform.Rotation.z);
-            Vector3 forward = Vector3RotateByQuaternion({0.0f, 0.0f, -1.0f}, QuaternionInvert(orientation));
-
-            camera.target = Vector3Multiply(forward,
-                                            Vector3Add(
-                                                    cameraTransform.Translation,
-                                                    cameraTransform.Rotation
-                                            )
-            );
-
-
-
-        }
-
-        int MAX_INSTANCES = transformView.size_hint();
-        Matrix *transforms = (Matrix *) malloc(
-                MAX_INSTANCES * sizeof(Matrix));   // Pre-multiplied transformations passed to rlgl
-
-
-
-
-        CreateLight(LIGHT_DIRECTIONAL, (Vector3) {50.0f, 50.0f, 0.0f}, Vector3Zero(), WHITE, shader);
+        UpdateCamera(&camera);
 
         // NOTE: We are assigning the intancing shader to material.shader
         // to be used on mesh drawing with DrawMeshInstanced()
         Material material = AssetManager::GetModel(0)->materials[0];
         material.shader = shader;
-
-        models.clear();
-        for (int i = 0; i < transformArrays.size(); i++)
-        {
-            transformArrays[i].clear();
-        }
-        //transformArrays.clear();
 
         int entityCount = 0;
         for (auto entity: transformView) {
@@ -169,9 +157,16 @@ class GraphicsSystem : public SystemBase
                 else
                 {
                     models.push_back(modelId);
-                    std::vector<Matrix> newBin;
-                    transformArrays.push_back(newBin);
-                    newBin.push_back(transformMatrix);
+                    if (transformArrays.size() < models.size())
+                    {
+                        std::vector<Matrix> newBin;
+                        transformArrays.push_back(newBin);
+                        newBin.push_back(transformMatrix);
+                    }
+                    else
+                    {
+                        transformArrays[std::distance(models.begin(), bin)].push_back(transformMatrix);
+                    }
                 }
 
                 entityCount++;
@@ -180,48 +175,70 @@ class GraphicsSystem : public SystemBase
 
         BeginDrawing();
 
-        ClearBackground(BLACK);
+#ifdef RENDER_TO_TEXTURE
+        if (RenderToTexture)
+        {
+            BeginTextureMode(renderTex);
+            ClearBackground(BLANK);
+        }
+        else
+        {
+#endif
+
+            ClearBackground(BLACK);
+#ifdef RENDER_TO_TEXTURE
+        }
+#endif
 
         BeginMode3D(camera);
 
-        // DrawMeshInstanced(AssetManager::GetModel(0)->meshes[0], material, transforms, entityCount);
-        // std::cout << "Drawing "<< models.size() <<" batches\n";
         for (int i = 0; i < models.size(); i++)
         {
             Matrix *array = transformArrays[i].data();
-            // std::cout << "Drawing batch " << i << ", model " << models[i] << ", " << transformArrays[i].size() << " entities";
             DrawMeshInstanced(AssetManager::GetModel(models[i])->meshes[0], material, array, transformArrays[i].size());
-            // std::cout << ".\n";
+            TriangleCount += AssetManager::GetModel(models[i])->meshes[0].triangleCount * transformArrays[i].size();
         }
-        // std::cout << "Done drawing batches\n";
 
         DrawGrid(10, 1.0f);
-        EndMode3D();
 
+        EndMode3D();
+#ifdef RENDER_TO_TEXTURE
+        if (RenderToTexture)
+        {
+            EndTextureMode();
+            BeginDrawing();
+            ClearBackground(BLACK);
+            DrawTexturePro(renderTex.texture, sourceRect, destRect, Origin, 0.0f, WHITE);
+        }
+#endif
+        rlImGuiBegin();
+        bool open = false;
+        ImGui::ShowDemoWindow(&open);
+
+        ImGui::Begin("GraphicsSystem");
+#ifdef RENDER_TO_TEXTURE
+        ImGui::Checkbox("Use Render Buffers", &RenderToTexture);
+#endif
+        ImGui::Text("Drawn Entities: %d", entityCount);
+        ImGui::Text("Triangles: %d", TriangleCount);
+        ImGui::Text("FPS: %d", GetFPS());
+        ImGui::Text("Draw Batches: %d", models.size());
+        for (int i = 0; i < models.size(); i++)
+        {
+            ImGui::Text("\tID: %d, %d", i, transformArrays[i].size());
+        }
+        ImGui::End();
+        rlImGuiEnd();
+
+        DrawFPS(10, 10);
         EndDrawing();
 
-        fps = ((3.0f * fps) + GetFPS()) / 4.0f;
-
         FrameCount++;
-        if (FrameCount == 0) {
-            std::cout << "\n";
-            std::cout << "Entities: " << entityCount << "\n";
-            std::cout << " Batches: " << models.size() << "\n";
-            for (int i = 0; i < models.size(); i++)
-            {
-                std::cout << "\tID: " << i << ",\t" << transformArrays[i].size() << "\n";
-            }
-            std::cout << "     FPS: " << fps << "\n";
-            std::cout << "    Tris: " << TriangleCount << "\n";
-            std::cout << "LOD Bias: " << LodBias << "\n";
-        }
-        if (FrameCount % 2 == 0) {
-            if (fps < TargetFps - 2) {
-                LodBias *= 0.999f;
-            }
-            if (fps > TargetFps) {
-                LodBias *= 1.01f;
-            }
+
+        models.clear();
+        for (int i = 0; i < transformArrays.size(); i++)
+        {
+            transformArrays[i].clear();
         }
     }
 };

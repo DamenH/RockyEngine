@@ -18,7 +18,7 @@ class FreeCameraSystem : public SystemBase {
     }
 
     void OnUpdate(entt::registry &registry) override {
-
+/*
         // TODO understand why this is called a view and not a filter
         auto inputView = registry.view<InputComponent>();
         auto &input = inputView.get<InputComponent>(inputView[0]);
@@ -27,7 +27,6 @@ class FreeCameraSystem : public SystemBase {
 
         for (auto cameraEntity: cameraView) {
             auto &cameraTransform = cameraView.get<TransformComponent>(cameraEntity);
-
 
             Vector3 deltaPosition = {0.0f, 0.0f, 0.0f};
             Quaternion orientation = QuaternionFromEuler(cameraTransform.Rotation.x, cameraTransform.Rotation.y,
@@ -85,4 +84,3 @@ class FreeCameraSystem : public SystemBase {
 
         }
     }
-};

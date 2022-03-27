@@ -79,17 +79,18 @@ class GraphicsSystem : public SystemBase {
             camera.position.y = cameraTransform.Translation.y;
             camera.position.z = cameraTransform.Translation.z;
 
-            camera.target = Vector3Multiply({1, 1, 1},
+            Quaternion orientation = QuaternionFromEuler(cameraTransform.Rotation.x, cameraTransform.Rotation.y,
+                                                         cameraTransform.Rotation.z);
+            Vector3 forward = Vector3RotateByQuaternion({0.0f, 0.0f, -1.0f}, QuaternionInvert(orientation));
+
+            camera.target = Vector3Multiply(forward,
                                             Vector3Add(
                                                     cameraTransform.Translation,
                                                     cameraTransform.Rotation
                                             )
             );
 
-//            if (FrameCount == 0) {
-//                std::cout << cameraTransform.Rotation.x << " " << cameraTransform.Rotation.y << " "
-//                          << cameraTransform.Rotation.z << std::endl;
-//            }
+
 
         }
 

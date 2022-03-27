@@ -8,6 +8,8 @@
 #include <raymath.h>
 #include <entt/entt.hpp>
 
+#include <iostream>
+
 class FreeCameraSystem : public SystemBase {
 
     const float CAMERA_ROT_RATE = 0.025;
@@ -26,35 +28,11 @@ class FreeCameraSystem : public SystemBase {
         for (auto cameraEntity: cameraView) {
             auto &cameraTransform = cameraView.get<TransformComponent>(cameraEntity);
 
-//            input.ForwardPressed;
-//            input.BackPressed;
-//            input.LeftPressed;
-//            input.RightPressed;
-
-//            input.MouseDeltaX;
-//            input.MouseDeltaY;
-/*
-            Ogre::Quaternion cameraOrientation = cameraTransform.orientation;
-            Ogre::Quaternion yaw = Ogre::Quaternion(Ogre::Radian(CAMERA_ROT_RATE),
-                                                    Ogre::Vector3(0, CAMERA_ROT_RATE * -input.MouseDeltaX, 0.0));
-            cameraOrientation = yaw * cameraOrientation;
-            Ogre::Quaternion pitch = Ogre::Quaternion(Ogre::Radian(CAMERA_ROT_RATE),
-                                                      Ogre::Vector3(CAMERA_ROT_RATE * -input.MouseDeltaY, 0.0, 0.0));
-            cameraOrientation = cameraOrientation * pitch;
-
-            cameraTransform.orientation = cameraOrientation;
-*/
-//            auto translationLeft = (float) ((input.RightPressed * 0.1) - (input.LeftPressed * 0.1));
-//            auto translationForward = (float) ((input.BackPressed * 0.1) - (input.ForwardPressed * 0.1));
-//            cameraTransform.Translation.z += .01;
-//            cameraTransform.Translation.x += .01;
-
 
             Vector3 deltaPosition = {0.0f, 0.0f, 0.0f};
             Quaternion orientation = QuaternionFromEuler(cameraTransform.Rotation.x, cameraTransform.Rotation.y,
                                                          cameraTransform.Rotation.z);
-            Quaternion inverse = QuaternionFromEuler(cameraTransform.Rotation.x, cameraTransform.Rotation.y,
-                                                     cameraTransform.Rotation.z);
+
 
 //            Vector3 forward = {2 * (orientation.x * orientation.z + orientation.w * orientation.y),
 //                               2 * (orientation.y * orientation.z - orientation.w * orientation.x),
@@ -96,9 +74,13 @@ class FreeCameraSystem : public SystemBase {
                             orientation)
             );
             // Yaw
-            cameraTransform.Rotation = {cameraTransform.Rotation.x,
-                                        cameraTransform.Rotation.y + input.MouseDelta.x * mouseSpeed,
-                                        cameraTransform.Rotation.z};
+//            cameraTransform.Rotation = {cameraTransform.Rotation.x,
+//                                        cameraTransform.Rotation.y + input.MouseDelta.x * mouseSpeed,
+//                                        cameraTransform.Rotation.z};
+
+
+            std::cout << cameraTransform.Rotation.x << " " << cameraTransform.Rotation.y << " "
+                      << cameraTransform.Rotation.z << std::endl;
 
 
         }

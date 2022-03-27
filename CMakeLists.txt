@@ -47,8 +47,3 @@ if (WIN32)
 else()
   target_link_libraries(${PROJECT_NAME} raylib imgui m dl pthread SDL2)
 endif()
-
-
-#add_custom_command(TARGET Game PRE_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/third_party/entt/src/entt ${CMAKE_SOURCE_DIR})
-
-#add_custom_command(TARGET Game POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/media/build $<TARGET_FILE_DIR:Game>)

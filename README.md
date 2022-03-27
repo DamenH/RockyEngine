@@ -42,4 +42,7 @@
 - HTML+CSS-based UI system
 - Live reloading of assets
 
+## Goals
 
+- [ ] Suitable for use in [**Ludum Dare 51 — September 30th - October 3rd, 2022**](https://ludumdare.com/#schedule)
+- [ ] Suitable for public use by **March 31st, 2023**

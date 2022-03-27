@@ -16,16 +16,6 @@ class InputSystem : public SystemBase {
 
     void OnUpdate(entt::registry &registry) override {
 
-        auto inputView = registry.view<InputComponent>();
-
-        auto &input = inputView.get<InputComponent>(inputView[0]);
-
-        input.ForwardPressed = IsKeyDown('W');
-        input.BackPressed = IsKeyDown('S');
-        input.LeftPressed = IsKeyDown('A');
-        input.RightPressed = IsKeyDown('D');
-
-        input.MouseDelta = GetMouseDelta();
 
     }
 };

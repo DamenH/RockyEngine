@@ -1,6 +1,6 @@
 #pragma once
 
-#include <raylib.h>
+#include <cstdint>
 
 struct InputComponent {
     bool ForwardPressed;
@@ -8,6 +8,7 @@ struct InputComponent {
     bool LeftPressed;
     bool RightPressed;
 
-    Vector2 MouseDelta;
+    int32_t MouseDeltaX;
+    int32_t MouseDeltaY;
 };
 

@@ -13,9 +13,7 @@
 #include <stdlib.h>
 #include <vector>
 #include <rlgl.h>
-
 #define RLIGHTS_IMPLEMENTATION
-
 #include "rlights.h"
 
 #include "rlImGui.h"
@@ -95,7 +93,8 @@ class GraphicsSystem : public SystemBase
         rlImGuiSetup(true); // sets up ImGui with ether a dark or light default theme
     }
 
-    void OnUpdate(entt::registry &registry) override {
+    void OnUpdate(entt::registry &registry) override
+    {
         int TriangleCount = 0;
 
         auto transformView = registry.view<TransformComponent, ModelComponent, VisibilityComponent>();
@@ -108,17 +107,11 @@ class GraphicsSystem : public SystemBase
         material.shader = shader;
 
         int entityCount = 0;
-        for (auto entity: transformView) {
+        for (auto entity : transformView)
+        {
             auto &visibility = transformView.get<VisibilityComponent>(entity);
-            if (visibility.Level >= 0 && visibility.Level < INT_MAX) {
-
-                if (visibility.Level >= 0 && visibility.Level < 3) {
-                    auto &transform = transformView.get<TransformComponent>(entity);
-
-                    transform.Rotation.x += 0.00001f * (entityCount >> 1);
-                    //transform.Rotation.y += 0.01f;
-                    //transform.Rotation.z += 0.02f;
-
+            if (visibility.Level >= 0)
+            {
 
                 auto &transform = transformView.get<TransformComponent>(entity);
                 auto &model = transformView.get<ModelComponent>(entity);

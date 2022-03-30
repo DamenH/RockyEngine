@@ -13,5 +13,4 @@ CMakeCache.txt
 CPackConfig.cmake
 CPackSourceConfig.cmake
 
-third_party
 media

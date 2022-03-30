@@ -27,7 +27,7 @@ add_executable(Game
         src/Engine/Core/AssetManager.cpp
         src/Engine/Core/Systems/rlights.h
         third_party/rlImGui/rlImGui.cpp
-        )
+        src/Engine/Utilities/Profiler.h)
 
 target_include_directories(Game
         PRIVATE

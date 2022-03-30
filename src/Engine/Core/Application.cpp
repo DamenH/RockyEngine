@@ -6,6 +6,8 @@
 
 #include "Components/CameraComponent.h"
 #include "Components/TranformComponent.h"
+#include "Engine/Utilities/Profiler.h"
+
 
 #include <entt/entt.hpp>
 #include <raylib.h>
@@ -21,7 +23,7 @@ void Application::setup() {
     SetConfigFlags(FLAG_MSAA_4X_HINT |
                    //FLAG_VSYNC_HINT |
                    FLAG_WINDOW_RESIZABLE
-                   //FLAG_FULLSCREEN_MODE
+                   // FLAG_FULLSCREEN_MODE
     );
     InitWindow(1920, 1080, "Rocky Engine");
     AssetManager::Load();
@@ -30,6 +32,8 @@ void Application::setup() {
     //auto entity = registry.create();
     //registry.emplace<CameraComponent>(entity);
     //registry.emplace<TransformComponent>(entity, 0, 0, 25);
+
+
 }
 
 void Application::RegisterSystem(SystemBase *system) {
@@ -42,14 +46,14 @@ void Application::InitializeSystems() {
     for (uint8_t i = 0; i < systemsIndex; i++) {
         systems[i]->OnStartup(registry);
     }
-
-
 }
 
 void Application::UpdateSystems() {
+//    Profiler::Begin(strdup("Frame"), registry);
     for (uint8_t i = 0; i < systemsIndex; i++) {
         systems[i]->OnUpdate(registry);
     }
+//    Profiler::End(strdup("Frame"), registry);
 }
 
 void Application::Run() {

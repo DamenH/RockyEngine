@@ -15,11 +15,15 @@
 // Responsible for culling, LoD, model transform calculation, and mesh instance binning
 class VisibilitySystem : public SystemBase
 {
-
-    float LodBias = 1.0f;
-    float MaxDistance = 2000.0f;
-    std::vector<std::tuple<int, int>> modelIndices; // Unique <Mesh ID, Material ID> permutation
-    std::vector<std::vector<Matrix>> transformArrays;// For every model there's a vector of transform matrices
+    const float MaxDistance = 2000.0f;
+    
+    std::vector<std::tuple<int, int>> modelIndices;   // Unique <Mesh ID, Material ID> permutation
+    std::vector<std::vector<Matrix>> transformArrays; // For every model there's a vector of transform matrices
+public:
+    inline static float LodBias = 100.0f;
+    inline static float AverageFps = 120.0f;
+    inline static float TargetFps = 120.0f;
+    inline static bool AutomaticBias = false;
 
     void OnStartup(entt::registry &registry) override
     {
@@ -27,15 +31,17 @@ class VisibilitySystem : public SystemBase
 
     void OnUpdate(entt::registry &registry) override
     {
-        if(IsKeyDown(KEY_UP))
+        AverageFps = ((3.0f * AverageFps) + GetFPS()) / 4.0f;
+        if (AutomaticBias)
         {
-            LodBias *= 1.01f;
-            std::cout << "LOD Bias: " << LodBias << "\n";
-        }
-        else if(IsKeyDown(KEY_DOWN))
-        {
-            LodBias *= 0.99f;
-            std::cout << "LOD Bias: " << LodBias << "\n";
+            if (AverageFps < TargetFps)
+            {
+                LodBias *= 1.01f;
+            }
+            if (AverageFps > TargetFps + 10)
+            {
+                LodBias *= 0.999f;
+            }
         }
 
         auto renderablesView = registry.view<ModelComponent, TransformComponent, VisibilityComponent>();
@@ -66,8 +72,6 @@ class VisibilitySystem : public SystemBase
 
             float distance = Vector3Distance(cameraLocation, transform.Translation);
 
-            
-
             // TODO: View Frustum Culling. Temporary nonsense conditional.
             if (distance > MaxDistance || transform.Translation.x < 0 || transform.Translation.z < 0)
             {
@@ -75,17 +79,15 @@ class VisibilitySystem : public SystemBase
             }
 
             // If not culled, identify the specific mesh to be used based on LOD
-            //int meshId = model.Meshes.data()[1];
-            float x = LodBias * 2.0f * distance / MaxDistance;//Scale relative to 50% of view distance
-            x = std::clamp(x, 0.0f, 1.0f);//Clamp between 0.0 and 1.0
-            x = x * (model.Meshes.size() - 1);//Scale to number of LODs            
+            // TODO: Improve LOD selection to logarithmic distance or something
+            float x = LodBias * 2.0f * distance / MaxDistance; // Scale relative to 50% of view distance
+            x = std::clamp(x, 0.0f, 1.0f);                     // Clamp between 0.0 and 1.0
+            x = x * (model.Meshes.size() - 1);                 // Scale to number of LODs
             int meshId = (int)std::floor(x);
-            if(meshId >= 4)
+            if (meshId >= 4)
             {
                 std::cout << "Invalid meshId: " << meshId << "\n";
             }
-
-
 
             // Create tuple representing this specific combination of Mesh and Material
             std::tuple<int, int> modelId = std::make_tuple(meshId, model.Material);
@@ -99,7 +101,7 @@ class VisibilitySystem : public SystemBase
             else
             {
                 // The combination isn't already present, so push it onto the models vector
-                modelIndices.push_back(modelId);                
+                modelIndices.push_back(modelId);
 
                 // ...and check if the transformArrays vector is big enough
                 if (transformArrays.size() < modelIndices.size())
@@ -142,11 +144,11 @@ class VisibilitySystem : public SystemBase
         {
             // Create entity and attach a new bin component with the appropriate fields
             auto binEntity = registry.create();
-            registry.emplace<InstanceBinComponent>(binEntity,InstanceBinComponent{
-                                                 get<0>(modelIndices[binEntityCount]),
-                                                 get<1>(modelIndices[binEntityCount]),
-                                                 (int)transformArrays[binEntityCount].size(),
-                                                 transformArrays[binEntityCount]});
+            registry.emplace<InstanceBinComponent>(binEntity, InstanceBinComponent{
+                                                                  get<0>(modelIndices[binEntityCount]),
+                                                                  get<1>(modelIndices[binEntityCount]),
+                                                                  (int)transformArrays[binEntityCount].size(),
+                                                                  transformArrays[binEntityCount]});
             binEntityCount++;
         }
 

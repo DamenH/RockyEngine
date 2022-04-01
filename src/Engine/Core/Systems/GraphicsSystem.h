@@ -6,6 +6,7 @@
 #include "Engine/Core/Components/VisibilityComponent.h"
 #include "Engine/Core/Components/InstanceBinComponent.h"
 #include "Engine/Core/AssetManager.h"
+#include "Engine/Core/Systems/VisibilitySystem.h"
 
 #include <entt/entt.hpp>
 #include <raylib.h>
@@ -28,12 +29,14 @@ class GraphicsSystem : public SystemBase
     uint8_t FrameCount = 0;
 
 #ifdef RENDER_TO_TEXTURE
-    bool RenderToTexture = false;
+    bool RenderToTexture = true;
     RenderTexture2D renderTex;
     Rectangle sourceRect;
     Rectangle destRect;
     Vector2 Origin;
 #endif
+
+    bool DebugGuiActive = false;
 
     void OnStartup(entt::registry &registry) override
     {
@@ -50,7 +53,7 @@ class GraphicsSystem : public SystemBase
         // Generate the actual game entities.
         // TODO: Move this to userland
         std::cout << "Generating scene\n";
-        float roidCount = 10000.0f; // Number of asteroids
+        float roidCount = 10000.0f;             // Number of asteroids
         float scalar = log(roidCount) * 150.0f; // Scale range of locations for even density
         for (int i = 0; i < roidCount; i++)
         {
@@ -61,24 +64,20 @@ class GraphicsSystem : public SystemBase
 
             // Attach a Transform
             registry.emplace<TransformComponent>(entity, TransformComponent{
-                                                 Vector3{x, y, z},
-                                                 Vector3{0.0, 0.0, 0.0},
-                                                 Vector3{1.0, 1.0, 1.0},
-                                                 MatrixIdentity()});
-            // Attach a Model      
-            std::vector<int> meshIds = {0, 1, 2, 3};  
-            int materialId = 4;    
+                                                             Vector3{x, y, z},
+                                                             Vector3{0.0, 0.0, 0.0},
+                                                             Vector3{1.0, 1.0, 1.0},
+                                                             MatrixIdentity()});
+            // Attach a Model
+            std::vector<int> meshIds = {0, 1, 2, 3};
+            int materialId = 4;
             registry.emplace<ModelComponent>(entity, ModelComponent{
-                meshIds,
-                materialId
-            });
-            
+                                                         meshIds,
+                                                         materialId});
+
             // Attach a Visibility
             registry.emplace<VisibilityComponent>(entity, TransformComponent{});
         }
-
-        
-        
 
 #ifdef RENDER_TO_TEXTURE
         destRect.width = 1920;
@@ -99,8 +98,6 @@ class GraphicsSystem : public SystemBase
         int TriangleCount = 0;
         int entityCount = 0;
         int batchCount = 0;
-
-        UpdateCamera(&camera);
 
         BeginDrawing();
 
@@ -148,22 +145,41 @@ class GraphicsSystem : public SystemBase
             DrawTexturePro(renderTex.texture, sourceRect, destRect, Origin, 0.0f, WHITE);
         }
 #endif
-        rlImGuiBegin();
-        bool open = false;
-        ImGui::ShowDemoWindow(&open);
 
-        ImGui::Begin("GraphicsSystem");
+        if (IsKeyReleased(KEY_Q))
+        {
+            DebugGuiActive = !DebugGuiActive;
+        }
+
+        if (DebugGuiActive)
+        {
+            rlImGuiBegin();
+            // bool open = false;
+            // ImGui::ShowDemoWindow(&open);
+
+            ImGui::Begin("GraphicsSystem");
 #ifdef RENDER_TO_TEXTURE
-        ImGui::Checkbox("Use Render Buffers", &RenderToTexture);
+            ImGui::Checkbox("Use Render Buffers", &RenderToTexture);
 #endif
-        ImGui::Text("Drawn Entities: %d", entityCount);
-        ImGui::Text("Triangles: %d", TriangleCount);
-        ImGui::Text("FPS: %d", GetFPS());
-        ImGui::Text("Draw Batches: %d", batchCount);
-        ImGui::End();
-        rlImGuiEnd();
+            ImGui::Text("Drawn Entities: %d", entityCount);
+            ImGui::Text("Triangles: %d", TriangleCount);
+            ImGui::Text("FPS: %d", GetFPS());
+            ImGui::Text("Draw Batches: %d", batchCount);
+            ImGui::End();
 
-        DrawFPS(10, 10);
+            ImGui::Begin("VisibilitySystem");
+            ImGui::Checkbox("Automatic LOD", &VisibilitySystem::AutomaticBias);
+            ImGui::InputFloat("LOD Bias", &VisibilitySystem::LodBias);
+            ImGui::InputFloat("Target FPS", &VisibilitySystem::TargetFps);
+            ImGui::Text("Average FPS: %f", VisibilitySystem::AverageFps);
+            ImGui::End();
+            rlImGuiEnd();
+        }
+        else
+        {
+            UpdateCamera(&camera);
+        }
+
         EndDrawing();
 
         FrameCount++;

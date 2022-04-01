@@ -66,10 +66,11 @@ class GraphicsSystem : public SystemBase
                                                  Vector3{1.0, 1.0, 1.0},
                                                  MatrixIdentity()});
             // Attach a Model      
-            std::vector<int> meshIds = {0};      
+            std::vector<int> meshIds = {0, 1, 2, 3};  
+            int materialId = 4;    
             registry.emplace<ModelComponent>(entity, ModelComponent{
                 meshIds,
-                1
+                materialId
             });
             
             // Attach a Visibility

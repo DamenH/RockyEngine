@@ -3,7 +3,7 @@
 #include <raylib.h>
 #include <raymath.h>
 
-// Pointer to a Mesh, Shader, first element in a Matrix array of transforms, and a count of instances
+// ID of a Mesh, Shader, first element in a Matrix array of transforms, and a count of instances
 // Everything the renderer needs for instancing
 struct InstanceBinComponent {
     int Mesh;

@@ -16,7 +16,8 @@
 class VisibilitySystem : public SystemBase
 {
 
-    float LodBias = 100.0f;
+    float LodBias = 1.0f;
+    float MaxDistance = 2000.0f;
     std::vector<std::tuple<int, int>> modelIndices; // Unique <Mesh ID, Material ID> permutation
     std::vector<std::vector<Matrix>> transformArrays;// For every model there's a vector of transform matrices
 
@@ -26,6 +27,17 @@ class VisibilitySystem : public SystemBase
 
     void OnUpdate(entt::registry &registry) override
     {
+        if(IsKeyDown(KEY_UP))
+        {
+            LodBias *= 1.01f;
+            std::cout << "LOD Bias: " << LodBias << "\n";
+        }
+        else if(IsKeyDown(KEY_DOWN))
+        {
+            LodBias *= 0.99f;
+            std::cout << "LOD Bias: " << LodBias << "\n";
+        }
+
         auto renderablesView = registry.view<ModelComponent, TransformComponent, VisibilityComponent>();
         auto cameraView = registry.view<CameraComponent, TransformComponent>();
 
@@ -52,14 +64,28 @@ class VisibilitySystem : public SystemBase
             // Store the calculated transform for any other systems that need it
             transform.Transform = transformMatrix;
 
+            float distance = Vector3Distance(cameraLocation, transform.Translation);
+
+            
+
             // TODO: View Frustum Culling. Temporary nonsense conditional.
-            if (transform.Translation.x < 0 || transform.Translation.y < 0)
+            if (distance > MaxDistance || transform.Translation.x < 0 || transform.Translation.z < 0)
             {
                 continue;
             }
 
             // If not culled, identify the specific mesh to be used based on LOD
-            int meshId = model.Meshes.data()[0];
+            //int meshId = model.Meshes.data()[1];
+            float x = LodBias * 2.0f * distance / MaxDistance;//Scale relative to 50% of view distance
+            x = std::clamp(x, 0.0f, 1.0f);//Clamp between 0.0 and 1.0
+            x = x * (model.Meshes.size() - 1);//Scale to number of LODs            
+            int meshId = (int)std::floor(x);
+            if(meshId >= 4)
+            {
+                std::cout << "Invalid meshId: " << meshId << "\n";
+            }
+
+
 
             // Create tuple representing this specific combination of Mesh and Material
             std::tuple<int, int> modelId = std::make_tuple(meshId, model.Material);

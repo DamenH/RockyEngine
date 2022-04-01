@@ -6,7 +6,7 @@
 #include <raymath.h>
 #include "Systems/rlights.h"
 
-int NextId = 0;
+static int NextId = 0;
 
 std::unordered_map<int, Mesh> Meshes;
 std::unordered_map<int, Material> Materials;
@@ -44,16 +44,32 @@ void AssetManager::Load()
     SetShaderValue(shader, ambientLoc, ambient, SHADER_UNIFORM_VEC4);
     CreateLight(LIGHT_DIRECTIONAL, (Vector3){50.0f, 50.0f, 0.0f}, Vector3Zero(), WHITE, shader);
 
-    Model model = LoadModel("../media/Asteroid/asteroid_01.obj");
+    Material material = LoadModel("../media/Asteroid/asteroid_04.obj").materials[0];
     Texture2D texture = LoadTexture("../media/Asteroid/asteroid_4k.jpg");
-    model.materials[0].shader = shader;
-    model.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = texture;
+    material.shader = shader;
+    material.maps[MATERIAL_MAP_DIFFUSE].texture = texture;
 
-    Meshes[NextId] = model.meshes[0]; //0
-    NextId++;
+    LoadMesh("../media/Asteroid/asteroid_00.obj");
+    LoadMesh("../media/Asteroid/asteroid_01.obj");
+    LoadMesh("../media/Asteroid/asteroid_02.obj");
+    LoadMesh("../media/Asteroid/asteroid_03.obj");
 
-    Materials[NextId] = model.materials[0]; //1
-    NextId++;
+    LoadMaterial(material);
 
     std::cout << "Done" << std::endl;
+}
+
+int AssetManager::LoadMesh(char *path)
+{
+    Model model = LoadModel(path);
+    Meshes[NextId] = model.meshes[0];
+    NextId++;
+    return NextId - 1;
+}
+
+int AssetManager::LoadMaterial(Material material)
+{
+    Materials[NextId] = material;
+    NextId++;
+    return NextId - 1;
 }

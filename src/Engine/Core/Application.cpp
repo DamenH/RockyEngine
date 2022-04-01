@@ -3,6 +3,7 @@
 #include "Systems/TransformSystem.h"
 #include "Systems/GraphicsSystem.h"
 #include "Systems/VisibilitySystem.h"
+#include "Systems/ProfilingSystem.h"
 
 #include "Components/CameraComponent.h"
 #include "Components/TranformComponent.h"
@@ -23,7 +24,7 @@ void Application::setup() {
     SetConfigFlags(FLAG_MSAA_4X_HINT |
                    //FLAG_VSYNC_HINT |
                    FLAG_WINDOW_RESIZABLE
-                   // FLAG_FULLSCREEN_MODE
+            // FLAG_FULLSCREEN_MODE
     );
     InitWindow(1920, 1080, "Rocky Engine");
     AssetManager::Load();
@@ -49,11 +50,10 @@ void Application::InitializeSystems() {
 }
 
 void Application::UpdateSystems() {
-//    Profiler::Begin(strdup("Frame"), registry);
+    Profiler::Start("Frame", registry);
     for (uint8_t i = 0; i < systemsIndex; i++) {
         systems[i]->OnUpdate(registry);
     }
-//    Profiler::End(strdup("Frame"), registry);
 }
 
 void Application::Run() {
@@ -66,11 +66,13 @@ void Application::Run() {
     TransformSystem transformSystem;
     GraphicsSystem graphicsSystem;
     VisibilitySystem visibilitySystem;
+    ProfilingSystem profilingSystem;
 
     RegisterSystem(&inputSystem);
     RegisterSystem(&transformSystem);
     RegisterSystem(&graphicsSystem);
     RegisterSystem(&visibilitySystem);
+    RegisterSystem(&profilingSystem);
 
     InitializeSystems();
 

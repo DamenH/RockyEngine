@@ -4,6 +4,7 @@
 #include "Engine/Core/Components/TranformComponent.h"
 #include "Engine/Core/Components/ModelComponent.h"
 #include "Engine/Core/Components/VisibilityComponent.h"
+#include "Engine/Core/Components/InstanceBinComponent.h"
 #include "Engine/Core/AssetManager.h"
 
 #include <entt/entt.hpp>
@@ -19,19 +20,15 @@
 #include "rlImGui.h"
 #include "imgui.h"
 
-//#define RENDER_TO_TEXTURE
+#define RENDER_TO_TEXTURE
 
 class GraphicsSystem : public SystemBase
 {
     Camera3D camera;
     uint8_t FrameCount = 0;
-    Shader shader;
-
-    std::vector<int> models;
-    std::vector<std::vector<Matrix>> transformArrays;
 
 #ifdef RENDER_TO_TEXTURE
-    bool RenderToTexture = true;
+    bool RenderToTexture = false;
     RenderTexture2D renderTex;
     Rectangle sourceRect;
     Rectangle destRect;
@@ -40,6 +37,8 @@ class GraphicsSystem : public SystemBase
 
     void OnStartup(entt::registry &registry) override
     {
+        // Camera struct initialization
+        // TODO: Eliminate RayLib camera struct
         camera = {0};
         camera.position = (Vector3){0.0f, 10.0f, 0.0f}; // Camera position
         camera.target = (Vector3){0.0f, 0.0f, 0.0f};    // Camera looking at point
@@ -48,9 +47,11 @@ class GraphicsSystem : public SystemBase
         camera.projection = CAMERA_PERSPECTIVE;         // Camera mode type
         SetCameraMode(camera, CAMERA_FIRST_PERSON);     // Set a free camera mode
 
+        // Generate the actual game entities.
+        // TODO: Move this to userland
         std::cout << "Generating scene\n";
-        float roidCount = 10000.0f;
-        float scalar = log(roidCount) * 150.0f;
+        float roidCount = 10000.0f; // Number of asteroids
+        float scalar = log(roidCount) * 150.0f; // Scale range of locations for even density
         for (int i = 0; i < roidCount; i++)
         {
             auto entity = registry.create();
@@ -58,26 +59,25 @@ class GraphicsSystem : public SystemBase
             float y = ((rand() - rand()) / (float)RAND_MAX) * scalar * 0.05f;
             float z = ((rand() - rand()) / (float)RAND_MAX) * scalar;
 
-            registry.emplace<TransformComponent>(entity,
+            // Attach a Transform
+            registry.emplace<TransformComponent>(entity, TransformComponent{
                                                  Vector3{x, y, z},
                                                  Vector3{0.0, 0.0, 0.0},
-                                                 Vector3{1.0, 1.0, 1.0});
-            registry.emplace<ModelComponent>(entity, 0);
-            registry.emplace<VisibilityComponent>(entity, 0);
+                                                 Vector3{1.0, 1.0, 1.0},
+                                                 MatrixIdentity()});
+            // Attach a Model      
+            std::vector<int> meshIds = {0};      
+            registry.emplace<ModelComponent>(entity, ModelComponent{
+                meshIds,
+                1
+            });
+            
+            // Attach a Visibility
+            registry.emplace<VisibilityComponent>(entity, TransformComponent{});
         }
 
-        shader = LoadShader(TextFormat("../media/Shaders/base_lighting_instanced.vs", 330),
-                            TextFormat("../media/Shaders/lighting.fs", 330));
-        // Get some shader locations
-        shader.locs[SHADER_LOC_MATRIX_MVP] = GetShaderLocation(shader, "mvp");
-        shader.locs[SHADER_LOC_VECTOR_VIEW] = GetShaderLocation(shader, "viewPos");
-        shader.locs[SHADER_LOC_MATRIX_MODEL] = GetShaderLocationAttrib(shader, "instanceTransform");
-
-        // Ambient light level
-        int ambientLoc = GetShaderLocation(shader, "ambient");
-        float ambient[4] = {0.2f, 0.2f, 0.2f, 1.0f};
-        SetShaderValue(shader, ambientLoc, ambient, SHADER_UNIFORM_VEC4);
-        CreateLight(LIGHT_DIRECTIONAL, (Vector3){50.0f, 50.0f, 0.0f}, Vector3Zero(), WHITE, shader);
+        
+        
 
 #ifdef RENDER_TO_TEXTURE
         destRect.width = 1920;
@@ -96,75 +96,10 @@ class GraphicsSystem : public SystemBase
     void OnUpdate(entt::registry &registry) override
     {
         int TriangleCount = 0;
-
-        auto transformView = registry.view<TransformComponent, ModelComponent, VisibilityComponent>();
+        int entityCount = 0;
+        int batchCount = 0;
 
         UpdateCamera(&camera);
-
-        // NOTE: We are assigning the intancing shader to material.shader
-        // to be used on mesh drawing with DrawMeshInstanced()
-        Material material = AssetManager::GetModel(0)->materials[0];
-        material.shader = shader;
-
-        int entityCount = 0;
-        for (auto entity : transformView)
-        {
-            auto &visibility = transformView.get<VisibilityComponent>(entity);
-            if (visibility.Level >= 0)
-            {
-
-                auto &transform = transformView.get<TransformComponent>(entity);
-                auto &model = transformView.get<ModelComponent>(entity);
-
-                // Update Transform (Temporary code, Userland concern)
-                transform.Rotation.x += 0.00001f * (entityCount >> 1);
-                // transform.Rotation.y += 0.01f;
-                // transform.Rotation.z += 0.02f;
-
-                // Calculate the view matrix
-                Matrix transformMatrix = MatrixMultiply(MatrixRotateXYZ(transform.Rotation),
-                                                        MatrixTranslate(transform.Translation.x,
-                                                                        transform.Translation.y,
-                                                                        transform.Translation.z));
-
-                // Identify the model that should be rendered
-                int modelId = AssetManager::GetModelSet(model.ModelSetId)->modelLod2;
-                if (visibility.Level == 0)
-                {
-                    modelId = AssetManager::GetModelSet(model.ModelSetId)->model;
-                }
-                if (visibility.Level == 1)
-                {
-                    modelId = AssetManager::GetModelSet(model.ModelSetId)->modelLod1;
-                }
-                if (visibility.Level == 2)
-                {
-                    modelId = AssetManager::GetModelSet(model.ModelSetId)->modelLod2;
-                }
-                // Bin transform based on Model
-                std::vector<int>::iterator bin = std::find(models.begin(), models.end(), modelId);
-                if (bin != models.end())
-                {
-                    transformArrays[std::distance(models.begin(), bin)].push_back(transformMatrix);
-                }
-                else
-                {
-                    models.push_back(modelId);
-                    if (transformArrays.size() < models.size())
-                    {
-                        std::vector<Matrix> newBin;
-                        transformArrays.push_back(newBin);
-                        newBin.push_back(transformMatrix);
-                    }
-                    else
-                    {
-                        transformArrays[std::distance(models.begin(), bin)].push_back(transformMatrix);
-                    }
-                }
-
-                entityCount++;
-            }
-        }
 
         BeginDrawing();
 
@@ -185,11 +120,19 @@ class GraphicsSystem : public SystemBase
 
         BeginMode3D(camera);
 
-        for (int i = 0; i < models.size(); i++)
+        auto binsView = registry.view<InstanceBinComponent>();
+        for (auto entity : binsView)
         {
-            Matrix *array = transformArrays[i].data();
-            DrawMeshInstanced(AssetManager::GetModel(models[i])->meshes[0], material, array, transformArrays[i].size());
-            TriangleCount += AssetManager::GetModel(models[i])->meshes[0].triangleCount * transformArrays[i].size();
+            InstanceBinComponent bin = binsView.get<InstanceBinComponent>(entity);
+            const Mesh mesh = AssetManager::GetMesh(bin.Mesh);
+            const Material material = AssetManager::GetMaterial(bin.Material);
+            const int count = bin.InstanceCount;
+            Matrix *array = bin.ModelTransforms.data();
+
+            DrawMeshInstanced(mesh, material, array, count);
+            TriangleCount += mesh.triangleCount * count;
+            entityCount += count;
+            batchCount++;
         }
 
         DrawGrid(10, 1.0f);
@@ -215,11 +158,7 @@ class GraphicsSystem : public SystemBase
         ImGui::Text("Drawn Entities: %d", entityCount);
         ImGui::Text("Triangles: %d", TriangleCount);
         ImGui::Text("FPS: %d", GetFPS());
-        ImGui::Text("Draw Batches: %d", models.size());
-        for (int i = 0; i < models.size(); i++)
-        {
-            ImGui::Text("\tID: %d, %d", i, transformArrays[i].size());
-        }
+        ImGui::Text("Draw Batches: %d", batchCount);
         ImGui::End();
         rlImGuiEnd();
 
@@ -227,11 +166,5 @@ class GraphicsSystem : public SystemBase
         EndDrawing();
 
         FrameCount++;
-
-        models.clear();
-        for (int i = 0; i < transformArrays.size(); i++)
-        {
-            transformArrays[i].clear();
-        }
     }
 };

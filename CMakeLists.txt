@@ -25,9 +25,11 @@ target_include_directories( imgui
 add_executable(Game
         main.cpp
         src/Engine/Core/AssetManager.cpp
-        src/Engine/Core/Systems/rlights.h
+        src/Engine/Core/Systems/RLFrustrum.cpp
         third_party/rlImGui/rlImGui.cpp
         )
+
+
 
 target_include_directories(Game
         PRIVATE

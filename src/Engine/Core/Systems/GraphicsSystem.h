@@ -140,7 +140,7 @@ class GraphicsSystem : public SystemBase
         if (RenderToTexture)
         {
             EndTextureMode();
-            BeginDrawing();
+            //BeginDrawing();
             ClearBackground(BLACK);
             DrawTexturePro(renderTex.texture, sourceRect, destRect, Origin, 0.0f, WHITE);
         }

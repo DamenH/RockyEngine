@@ -11,12 +11,13 @@
 #include <entt/entt.hpp>
 #include <raylib.h>
 #include <raymath.h>
+#include "RLFrustum.h"
 
 // Responsible for culling, LoD, model transform calculation, and mesh instance binning
 class VisibilitySystem : public SystemBase
 {
     const float MaxDistance = 2000.0f;
-    
+
     std::vector<std::tuple<int, int>> modelIndices;   // Unique <Mesh ID, Material ID> permutation
     std::vector<std::vector<Matrix>> transformArrays; // For every model there's a vector of transform matrices
 public:
@@ -24,9 +25,17 @@ public:
     inline static float AverageFps = 120.0f;
     inline static float TargetFps = 120.0f;
     inline static bool AutomaticBias = false;
+    inline static Camera CullingCamera;
 
     void OnStartup(entt::registry &registry) override
     {
+        // TODO: Eliminate RayLib camera struct
+        CullingCamera = {0};
+        CullingCamera.position = (Vector3){0.0f, 10.0f, 0.0f}; // Camera position
+        CullingCamera.target = (Vector3){0.0f, 0.0f, 0.0f};    // Camera looking at point
+        CullingCamera.up = (Vector3){0.0f, 1.0f, 0.0f};        // Camera up vector (rotation towards target)
+        CullingCamera.fovy = 60.0f;                            // Camera field-of-view Y
+        CullingCamera.projection = CAMERA_PERSPECTIVE;         // Camera mode type
     }
 
     void OnUpdate(entt::registry &registry) override
@@ -73,7 +82,7 @@ public:
             float distance = Vector3Distance(cameraLocation, transform.Translation);
 
             // TODO: View Frustum Culling. Temporary nonsense conditional.
-            if (distance > MaxDistance || transform.Translation.x < 0 || transform.Translation.z < 0)
+            if (distance > MaxDistance || !InFrustum(CullingCamera, transform.Translation))
             {
                 continue;
             }
@@ -159,4 +168,14 @@ public:
         }
         modelIndices.clear();
     }
+
+    bool InFrustum(Camera camera, Vector3 point)
+    {
+        RLFrustum frustum;
+        frustum.Extract();
+        //return frustum.PointIn(point);
+
+        return point.x >= 0 && point.z >= 0;
+    }
+
 };

@@ -4,58 +4,45 @@
 #include <chrono>
 #include <entt/entt.hpp>
 
-enum timestamp_type {
-    start, stop
-};
-
 struct TimestampComponent {
     std::array<char, 16> label;
-    uint32_t frame;
-    std::chrono::high_resolution_clock::time_point timestamp;
-    timestamp_type type;
+    std::chrono::high_resolution_clock::time_point startTimestamp;
+    std::chrono::high_resolution_clock::time_point stopTimestamp;
 };
 
 class Profiler {
 
 private:
-
-    inline static uint32_t currentFrame = 0;
+    static TimestampComponent *currentFrameTimestamp;
 
 public:
-
-    static void Start(char const *label, entt::registry &registry) {
-        auto timestamp = std::chrono::high_resolution_clock::now();
-
-        if (label == "Frame") currentFrame++;
+    static TimestampComponent *Start(char const *label, entt::registry &registry) {
+        auto startTimestamp = std::chrono::high_resolution_clock::now();
 
         std::array<char, 16> _label;
         for (size_t i = 0; i < _label.size(); i++) {
             _label[i] = label[i];
-            if (label[i] == '\0') break;
+            if (label[i] == '\0')
+                break;
         }
 
         const auto entity = registry.create();
-        TimestampComponent timestampComponent = {_label, currentFrame, timestamp, start};
-        registry.emplace<TimestampComponent>(entity, timestampComponent);
+
+        auto timestamp = &registry.emplace<TimestampComponent>(entity, _label, startTimestamp, startTimestamp);
+
+        if (label == "Frame")
+            currentFrameTimestamp = timestamp;
+
+        return timestamp;
     }
 
-    static void Stop(char const *label, entt::registry &registry) {
-        auto timestamp = std::chrono::high_resolution_clock::now();
+    static void Stop(char const *label, TimestampComponent *timestampComponent) {
+        auto stopTimestamp = std::chrono::high_resolution_clock::now();
 
-        std::array<char, 16> _label;
-        for (size_t i = 0; i < _label.size(); i++) {
-            _label[i] = label[i];
-            if (label[i] == '\0') break;
-        }
-
-        const auto entity = registry.create();
-        TimestampComponent timestampComponent = {_label, currentFrame, timestamp, stop};
-        registry.emplace<TimestampComponent>(entity, timestampComponent);
+        timestampComponent->stopTimestamp = stopTimestamp;
     }
 
-    static uint32_t CurrentFrame() {
-        return currentFrame;
+    static TimestampComponent *CurrentFrameTimestamp() {
+        return currentFrameTimestamp;
     }
-
 };
-

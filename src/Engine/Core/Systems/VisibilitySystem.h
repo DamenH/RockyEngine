@@ -28,6 +28,7 @@ public:
     inline static bool AutomaticBias = true;
     inline static Camera CullingCamera;
     inline static RLFrustum frustum;
+    inline static bool UpdateFrustum = true;
 
     void OnStartup(entt::registry &registry) override
     {
@@ -45,11 +46,11 @@ public:
         AverageFps = ((3.0f * AverageFps) + GetFPS()) / 4.0f;
         if (AutomaticBias)
         {
-            if (AverageFps < TargetFps)
+            if (AverageFps < TargetFps && LodBias < 100)
             {
                 LodBias *= 1.01f;
             }
-            if (AverageFps > TargetFps + 10)
+            if (AverageFps > TargetFps + 5)
             {
                 LodBias *= 0.999f;
             }
@@ -82,7 +83,9 @@ public:
             // Store the calculated transform for any other systems that need it
             transform.Transform = transformMatrix;
 
-            float distance = Vector3Distance(cameraLocation, transform.Translation);
+            float distance = abs(cameraLocation.x - transform.Translation.x) 
+                            + abs(cameraLocation.y - transform.Translation.y) 
+                            + abs(cameraLocation.z - transform.Translation.z);
 
             // TODO: View Frustum Culling. Temporary nonsense conditional.
             if (distance > MaxDistance || !InFrustum(CullingCamera, transform.Translation))
@@ -92,7 +95,7 @@ public:
 
             // If not culled, identify the specific mesh to be used based on LOD
             // TODO: Improve LOD selection to logarithmic distance or something
-            float x = LodBias * 2.0f * distance / MaxDistance; // Scale relative to 50% of view distance
+            float x = LodBias * 2.0f * distance / MaxDistance; // Base function
             x = std::clamp(x, 0.0f, 1.0f);                     // Clamp between 0.0 and 1.0
             x = x * (model.Meshes.size() - 1);                 // Scale to number of LODs
             int meshId = (int)std::floor(x);

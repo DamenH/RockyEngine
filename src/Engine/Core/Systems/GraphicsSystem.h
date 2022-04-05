@@ -116,9 +116,12 @@ class GraphicsSystem : public SystemBase
         }
 #endif
 
-        BeginMode3D(camera);        
-        VisibilitySystem::frustum.Extract();
-        VisibilitySystem::CullingCamera = camera;
+        BeginMode3D(camera);
+        if (VisibilitySystem::UpdateFrustum)
+        {
+            VisibilitySystem::frustum.Extract();
+            VisibilitySystem::CullingCamera = camera;
+        }
 
         auto binsView = registry.view<InstanceBinComponent>();
         for (auto entity : binsView)
@@ -132,7 +135,10 @@ class GraphicsSystem : public SystemBase
             DrawMeshInstanced(mesh, material, array, count);
             TriangleCount += mesh.triangleCount * count;
             entityCount += count;
-            batchCount++;
+            if (count > 0)
+            {
+                batchCount++;
+            }
         }
 
         DrawGrid(10, 1.0f);
@@ -142,7 +148,7 @@ class GraphicsSystem : public SystemBase
         if (RenderToTexture)
         {
             EndTextureMode();
-            //BeginDrawing();
+            // BeginDrawing();
             ClearBackground(BLACK);
             DrawTexturePro(renderTex.texture, sourceRect, destRect, Origin, 0.0f, WHITE);
         }
@@ -170,6 +176,7 @@ class GraphicsSystem : public SystemBase
             ImGui::End();
 
             ImGui::Begin("VisibilitySystem");
+            ImGui::Checkbox("Update Frustum", &VisibilitySystem::UpdateFrustum);
             ImGui::Checkbox("Automatic LOD", &VisibilitySystem::AutomaticBias);
             ImGui::InputFloat("LOD Bias", &VisibilitySystem::LodBias);
             ImGui::InputFloat("Target FPS", &VisibilitySystem::TargetFps);

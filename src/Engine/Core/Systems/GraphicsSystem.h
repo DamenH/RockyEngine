@@ -116,7 +116,9 @@ class GraphicsSystem : public SystemBase
         }
 #endif
 
-        BeginMode3D(camera);
+        BeginMode3D(camera);        
+        VisibilitySystem::frustum.Extract();
+        VisibilitySystem::CullingCamera = camera;
 
         auto binsView = registry.view<InstanceBinComponent>();
         for (auto entity : binsView)

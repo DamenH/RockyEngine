@@ -20,12 +20,14 @@ class VisibilitySystem : public SystemBase
 
     std::vector<std::tuple<int, int>> modelIndices;   // Unique <Mesh ID, Material ID> permutation
     std::vector<std::vector<Matrix>> transformArrays; // For every model there's a vector of transform matrices
+    
 public:
-    inline static float LodBias = 100.0f;
+    inline static float LodBias = 1.0f;
     inline static float AverageFps = 120.0f;
     inline static float TargetFps = 120.0f;
-    inline static bool AutomaticBias = false;
+    inline static bool AutomaticBias = true;
     inline static Camera CullingCamera;
+    inline static RLFrustum frustum;
 
     void OnStartup(entt::registry &registry) override
     {
@@ -56,7 +58,8 @@ public:
         auto renderablesView = registry.view<ModelComponent, TransformComponent, VisibilityComponent>();
         auto cameraView = registry.view<CameraComponent, TransformComponent>();
 
-        Vector3 cameraLocation = {0, 0, 0}; // Temporary until Camera component is implemented
+        Vector3 cameraLocation = CullingCamera.position; // Temporary until Camera component is implemented
+        
 
         for (auto entity : renderablesView) // For every renderable entity
         {
@@ -171,11 +174,11 @@ public:
 
     bool InFrustum(Camera camera, Vector3 point)
     {
-        RLFrustum frustum;
-        frustum.Extract();
-        //return frustum.PointIn(point);
+        //RLFrustum frustum;
+        //frustum.Extract();
+        return frustum.PointIn(point);
 
-        return point.x >= 0 && point.z >= 0;
+        //return point.x >= 0 && point.z >= 0;
     }
 
 };

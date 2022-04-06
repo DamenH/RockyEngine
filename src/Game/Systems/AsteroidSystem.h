@@ -18,6 +18,7 @@
 
 struct AsteroidComponent
 {
+    Vector3 Rotation;
 };
 
 class AsteroidSystem : public SystemBase
@@ -38,7 +39,7 @@ class AsteroidSystem : public SystemBase
     void OnStartup(entt::registry &registry) override
     {
         std::cout << "Generating scene\n";
-        float roidCount = 10000.0f;             // Number of asteroids
+        float roidCount = 50000.0f;             // Number of asteroids
         float scalar = log(roidCount) * 150.0f; // Scale range of locations for even density
         for (int i = 0; i < roidCount; i++)
         {
@@ -56,8 +57,7 @@ class AsteroidSystem : public SystemBase
                                                              Vector3{
                                                                  0.5f + (1.0f * rand() / (float)RAND_MAX),
                                                                  0.5f + (1.0f * rand() / (float)RAND_MAX),
-                                                                 0.5f + (1.0f * rand() / (float)RAND_MAX)
-                                                                 },
+                                                                 0.5f + (1.0f * rand() / (float)RAND_MAX)},
                                                              MatrixIdentity()});
             // Attach a Model
             std::vector<int> meshIds = {0, 1, 2, 3};
@@ -68,7 +68,12 @@ class AsteroidSystem : public SystemBase
 
             // Attach a Visibility
             registry.emplace<VisibilityComponent>(entity, VisibilityComponent{});
-            registry.emplace<AsteroidComponent>(entity, AsteroidComponent{});
+            registry.emplace<AsteroidComponent>(entity, AsteroidComponent{
+                                                            Vector3{
+                                                                ((rand() - rand()) / (float)RAND_MAX) * 0.01f,
+                                                                ((rand() - rand()) / (float)RAND_MAX) * 0.01f,
+                                                                ((rand() - rand()) / (float)RAND_MAX) * 0.01f}
+                                                        });
         }
     }
 
@@ -79,10 +84,11 @@ class AsteroidSystem : public SystemBase
         for (auto entity : view)
         {
             auto &transform = view.get<TransformComponent>(entity);
+            auto &asteroid = view.get<AsteroidComponent>(entity);
 
-            transform.Rotation.x += 0.01f;
-            transform.Rotation.y += 0.03f;
-            transform.Rotation.z += 0.001f;
+            transform.Rotation.x += asteroid.Rotation.x;
+            transform.Rotation.y += asteroid.Rotation.y;
+            transform.Rotation.z += asteroid.Rotation.z;
         }
     }
 };

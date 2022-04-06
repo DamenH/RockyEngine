@@ -20,7 +20,7 @@ class VisibilitySystem : public SystemBase
 
     std::vector<std::tuple<int, int>> modelIndices;   // Unique <Mesh ID, Material ID> permutation
     std::vector<std::vector<Matrix>> transformArrays; // For every model there's a vector of transform matrices
-    
+
 public:
     inline static float LodBias = 1.0f;
     inline static float AverageFps = 120.0f;
@@ -46,13 +46,19 @@ public:
         AverageFps = ((3.0f * AverageFps) + GetFPS()) / 4.0f;
         if (AutomaticBias)
         {
-            if (AverageFps < TargetFps && LodBias < 100)
+            if (AverageFps < TargetFps && LodBias < 10)
             {
-                LodBias *= 1.01f;
+                for(int i = 0; i < TargetFps - AverageFps; i++)
+                {
+                    LodBias *= 1.0001f;
+                }
             }
-            if (AverageFps > TargetFps + 5)
+            if (AverageFps > TargetFps + 10 && LodBias > 1)
             {
-                LodBias *= 0.999f;
+                for(int i = 0; i < AverageFps - TargetFps; i++)
+                {
+                    LodBias *= 0.99999f;
+                }
             }
         }
 
@@ -60,7 +66,6 @@ public:
         auto cameraView = registry.view<CameraComponent, TransformComponent>();
 
         Vector3 cameraLocation = CullingCamera.position; // Temporary until Camera component is implemented
-        
 
         for (auto entity : renderablesView) // For every renderable entity
         {
@@ -69,23 +74,24 @@ public:
             auto &model = renderablesView.get<ModelComponent>(entity);
 
             // Calculate the entity's Transform matrix
-            // Translation
-            Matrix transformMatrix = MatrixTranslate(transform.Translation.x,
-                                                     transform.Translation.y,
-                                                     transform.Translation.z);
-            // Rotation
-            transformMatrix = MatrixMultiply(transformMatrix, MatrixRotateXYZ(transform.Rotation));
+
             // Scale
-            transformMatrix = MatrixMultiply(transformMatrix, MatrixScale(transform.Scale.x,
-                                                                          transform.Scale.y,
-                                                                          transform.Scale.z));
+            Matrix transformMatrix = MatrixScale(transform.Scale.x,
+                                                 transform.Scale.y,
+                                                 transform.Scale.z);
+
+            // Rotation Scale
+            transformMatrix = MatrixMultiply(transformMatrix, MatrixRotateXYZ(transform.Rotation));
+
+            // Translation
+            transformMatrix = MatrixMultiply(transformMatrix, MatrixTranslate(transform.Translation.x,
+                                                                              transform.Translation.y,
+                                                                              transform.Translation.z));
 
             // Store the calculated transform for any other systems that need it
             transform.Transform = transformMatrix;
 
-            float distance = abs(cameraLocation.x - transform.Translation.x) 
-                            + abs(cameraLocation.y - transform.Translation.y) 
-                            + abs(cameraLocation.z - transform.Translation.z);
+            float distance = abs(cameraLocation.x - transform.Translation.x) + abs(cameraLocation.y - transform.Translation.y) + abs(cameraLocation.z - transform.Translation.z);
 
             // TODO: View Frustum Culling. Temporary nonsense conditional.
             if (distance > MaxDistance || !InFrustum(CullingCamera, transform.Translation))
@@ -177,11 +183,10 @@ public:
 
     bool InFrustum(Camera camera, Vector3 point)
     {
-        //RLFrustum frustum;
-        //frustum.Extract();
+        // RLFrustum frustum;
+        // frustum.Extract();
         return frustum.PointIn(point);
 
-        //return point.x >= 0 && point.z >= 0;
+        // return point.x >= 0 && point.z >= 0;
     }
-
 };

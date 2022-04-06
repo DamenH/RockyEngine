@@ -50,35 +50,6 @@ class GraphicsSystem : public SystemBase
         camera.projection = CAMERA_PERSPECTIVE;         // Camera mode type
         SetCameraMode(camera, CAMERA_FIRST_PERSON);     // Set a free camera mode
 
-        // Generate the actual game entities.
-        // TODO: Move this to userland
-        std::cout << "Generating scene\n";
-        float roidCount = 10000.0f;             // Number of asteroids
-        float scalar = log(roidCount) * 150.0f; // Scale range of locations for even density
-        for (int i = 0; i < roidCount; i++)
-        {
-            auto entity = registry.create();
-            float x = ((rand() - rand()) / (float)RAND_MAX) * scalar;
-            float y = ((rand() - rand()) / (float)RAND_MAX) * scalar * 0.05f;
-            float z = ((rand() - rand()) / (float)RAND_MAX) * scalar;
-
-            // Attach a Transform
-            registry.emplace<TransformComponent>(entity, TransformComponent{
-                                                             Vector3{x, y, z},
-                                                             Vector3{0.0, 0.0, 0.0},
-                                                             Vector3{1.0, 1.0, 1.0},
-                                                             MatrixIdentity()});
-            // Attach a Model
-            std::vector<int> meshIds = {0, 1, 2, 3};
-            int materialId = 4;
-            registry.emplace<ModelComponent>(entity, ModelComponent{
-                                                         meshIds,
-                                                         materialId});
-
-            // Attach a Visibility
-            registry.emplace<VisibilityComponent>(entity, TransformComponent{});
-        }
-
 #ifdef RENDER_TO_TEXTURE
         destRect.width = 1920;
         destRect.height = 1080;
@@ -184,7 +155,8 @@ class GraphicsSystem : public SystemBase
             ImGui::End();
             rlImGuiEnd();
         }
-        else
+        
+        if(!DebugGuiActive || IsMouseButtonDown(MOUSE_BUTTON_RIGHT))
         {
             UpdateCamera(&camera);
         }

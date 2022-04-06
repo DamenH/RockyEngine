@@ -3,6 +3,7 @@
 #include "Systems/TransformSystem.h"
 #include "Systems/GraphicsSystem.h"
 #include "Systems/VisibilitySystem.h"
+#include "Game/Systems/AsteroidSystem.h"
 
 #include "Components/CameraComponent.h"
 #include "Components/TranformComponent.h"
@@ -62,11 +63,13 @@ void Application::Run() {
     TransformSystem transformSystem;
     GraphicsSystem graphicsSystem;
     VisibilitySystem visibilitySystem;
+    AsteroidSystem asteroidSystem;
 
     RegisterSystem(&inputSystem);
-    RegisterSystem(&transformSystem);
-    RegisterSystem(&graphicsSystem);
+    RegisterSystem(&transformSystem);    
     RegisterSystem(&visibilitySystem);
+    RegisterSystem(&graphicsSystem);
+    RegisterSystem(&asteroidSystem);
 
     InitializeSystems();
 

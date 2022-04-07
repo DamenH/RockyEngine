@@ -42,6 +42,9 @@ class AsteroidSystem : public SystemBase
     {
         std::cout << "Generating scene\n";
         float roidCount = 50000.0f;             // Number of asteroids
+        #ifndef NDEBUG
+        roidCount = 5000.0f;             // Number of asteroids
+        #endif
         float scalar = log(roidCount) * 150.0f; // Scale range of locations for even density
         for (int i = 0; i < roidCount; i++)
         {

@@ -45,7 +45,7 @@ void AssetManager::Load()
     CreateLight(LIGHT_DIRECTIONAL, (Vector3){50.0f, 50.0f, 0.0f}, Vector3Zero(), WHITE, shader);
 
     Material material = LoadModel("../media/Asteroid/asteroid_04.obj").materials[0];
-    Texture2D texture = LoadTexture("../media/Asteroid/asteroid_4k.jpg");
+    Texture2D texture = LoadTexture("../media/Asteroid/asteroid_4k.png");
     material.shader = shader;
     material.maps[MATERIAL_MAP_DIFFUSE].texture = texture;
 

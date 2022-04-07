@@ -13,7 +13,7 @@ struct TimestampComponent {
 class Profiler {
 
 private:
-    static TimestampComponent *currentFrameTimestamp;
+    inline static TimestampComponent *currentFrameTimestamp;
 
 public:
     static TimestampComponent *Start(char const *label, entt::registry &registry) {

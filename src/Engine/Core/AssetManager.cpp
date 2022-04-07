@@ -2,75 +2,74 @@
 #include <raylib.h>
 #include <iostream>
 #include <unistd.h>
+#include <unordered_map>
+#include <raymath.h>
+#include "Systems/rlights.h"
 
-ModelSet modelSets[128];
-Model models[128];
-Texture2D billboards[128];
+static int NextId = 0;
 
-int modelSetCount = 0;
-int modelCount = 0;
-int billboardCount = 0;
+std::unordered_map<int, Mesh> Meshes;
+std::unordered_map<int, Material> Materials;
 
-AssetManager::AssetManager() {
+AssetManager::AssetManager()
+{
 }
 
-ModelSet *AssetManager::GetModelSet(int index) {
-    return &modelSets[index];
+Mesh AssetManager::GetMesh(int Id)
+{
+    return Meshes[Id];
 }
 
-Model *AssetManager::GetModel(int index) {
-    return &models[index];
+Material AssetManager::GetMaterial(int Id)
+{
+    return Materials[Id];
 }
 
-void AssetManager::Load() {
+void AssetManager::Load()
+{
     char cwd[256];
     getcwd(cwd, 256);
     std::cout << "Current working directory: " << cwd << std::endl;
     std::cout << "Loading resources" << std::endl;
-    //TODO: Change to dynamic search and load of assets
-    loadModelSet("../media/Asteroid/asteroid_00.obj",
-                 "../media/Asteroid/asteroid_01.obj",
-                 "../media/Asteroid/asteroid_03.obj",
-                 "../media/Asteroid/asteroid_4k.jpg",
-                 "../media/Asteroid/asteroid_billboard.png"
-    );
+
+    Shader shader = LoadShader(TextFormat("../media/Shaders/base_lighting_instanced.vs", 330),
+                               TextFormat("../media/Shaders/lighting.fs", 330));
+    // Get some shader locations
+    shader.locs[SHADER_LOC_MATRIX_MVP] = GetShaderLocation(shader, "mvp");
+    shader.locs[SHADER_LOC_VECTOR_VIEW] = GetShaderLocation(shader, "viewPos");
+    shader.locs[SHADER_LOC_MATRIX_MODEL] = GetShaderLocationAttrib(shader, "instanceTransform");
+    // Ambient light level
+    int ambientLoc = GetShaderLocation(shader, "ambient");
+    float ambient[4] = {0.2f, 0.2f, 0.2f, 1.0f};
+    SetShaderValue(shader, ambientLoc, ambient, SHADER_UNIFORM_VEC4);
+    CreateLight(LIGHT_DIRECTIONAL, (Vector3){50.0f, 50.0f, 0.0f}, Vector3Zero(), WHITE, shader);
+
+    Material material = LoadModel("../media/Asteroid/asteroid_04.obj").materials[0];
+    Texture2D texture = LoadTexture("../media/Asteroid/asteroid_4k.png");
+    material.shader = shader;
+    material.maps[MATERIAL_MAP_DIFFUSE].texture = texture;
+
+    LoadMesh("../media/Asteroid/asteroid_00.obj");
+    LoadMesh("../media/Asteroid/asteroid_01.obj");
+    LoadMesh("../media/Asteroid/asteroid_02.obj");
+    LoadMesh("../media/Asteroid/asteroid_03.obj");
+
+    LoadMaterial(material);
+
     std::cout << "Done" << std::endl;
 }
 
-
-
-int AssetManager::loadModelSet(char *meshFile, char *meshFileLod1, char *meshFileLod2, char *textureFile,
-                                char *billboardFile) {
-    ModelSet set;
-    set.model = loadModel(meshFile, textureFile);;
-    set.modelLod1 = loadModel(meshFileLod1, textureFile);
-    set.modelLod2 = loadModel(meshFileLod2, textureFile);
-    set.Billboard = loadBillboard(billboardFile);
-
-    modelSets[modelSetCount] = set;
-    int id = modelSetCount;
-    modelSetCount++;
-    return id;
+int AssetManager::LoadMesh(char *path)
+{
+    Model model = LoadModel(path);
+    Meshes[NextId] = model.meshes[0];
+    NextId++;
+    return NextId - 1;
 }
 
-int AssetManager::loadModel(char *meshFile, char *textureFile){
-    Model model = LoadModel(meshFile);
-    Texture2D texture = LoadTexture(textureFile);
-    GenTextureMipmaps(&texture);
-    model.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = texture;
-
-    models[modelCount] = model;
-    int id = modelCount;
-    modelCount++;
-    return id;
+int AssetManager::LoadMaterial(Material material)
+{
+    Materials[NextId] = material;
+    NextId++;
+    return NextId - 1;
 }
-
-int AssetManager::loadBillboard(char *billboardFile){
-    Texture2D billboard = LoadTexture(billboardFile);
-    GenTextureMipmaps(&billboard);
-    billboards[billboardCount] = billboard;
-    int id = billboardCount;
-    billboardCount++;
-    return id;
-}
-

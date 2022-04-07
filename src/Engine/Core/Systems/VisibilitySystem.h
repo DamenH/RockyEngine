@@ -39,6 +39,11 @@ public:
         CullingCamera.up = (Vector3){0.0f, 1.0f, 0.0f};        // Camera up vector (rotation towards target)
         CullingCamera.fovy = 60.0f;                            // Camera field-of-view Y
         CullingCamera.projection = CAMERA_PERSPECTIVE;         // Camera mode type
+
+#ifndef NDEBUG
+        TargetFps = 60;
+        AutomaticBias = false;
+#endif
     }
 
     void OnUpdate(entt::registry &registry) override
@@ -48,14 +53,14 @@ public:
         {
             if (AverageFps < TargetFps && LodBias < 10)
             {
-                for(int i = 0; i < TargetFps - AverageFps; i++)
+                for (int i = 0; i < TargetFps - AverageFps; i++)
                 {
                     LodBias *= 1.0001f;
                 }
             }
             if (AverageFps > TargetFps + 10 && LodBias > 1)
             {
-                for(int i = 0; i < AverageFps - TargetFps; i++)
+                for (int i = 0; i < AverageFps - TargetFps; i++)
                 {
                     LodBias *= 0.99999f;
                 }

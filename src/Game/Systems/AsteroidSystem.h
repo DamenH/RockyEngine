@@ -5,8 +5,10 @@
 #include "Engine/Core/Components/ModelComponent.h"
 #include "Engine/Core/Components/VisibilityComponent.h"
 #include "Engine/Core/Components/InstanceBinComponent.h"
+#include "Engine/Core/Components/CameraComponent.h"
 #include "Engine/Core/AssetManager.h"
 #include "Engine/Core/Systems/VisibilitySystem.h"
+#include "Engine/Core/Systems/GraphicsSystem.h"
 
 #include <entt/entt.hpp>
 #include <raylib.h>
@@ -43,38 +45,53 @@ class AsteroidSystem : public SystemBase
         float scalar = log(roidCount) * 150.0f; // Scale range of locations for even density
         for (int i = 0; i < roidCount; i++)
         {
-            auto entity = registry.create();
+            auto asteroidEntity = registry.create();
             // Attach a Transform
-            registry.emplace<TransformComponent>(entity, TransformComponent{
-                                                             Vector3{
-                                                                 ((rand() - rand()) / (float)RAND_MAX) * scalar,
-                                                                 ((rand() - rand()) / (float)RAND_MAX) * scalar * 0.05f,
-                                                                 ((rand() - rand()) / (float)RAND_MAX) * scalar},
-                                                             Vector3{
-                                                                 ((rand() - rand()) / (float)RAND_MAX) * 2 * PI,
-                                                                 ((rand() - rand()) / (float)RAND_MAX) * 2 * PI,
-                                                                 ((rand() - rand()) / (float)RAND_MAX) * 2 * PI},
-                                                             Vector3{
-                                                                 0.5f + (1.0f * rand() / (float)RAND_MAX),
-                                                                 0.5f + (1.0f * rand() / (float)RAND_MAX),
-                                                                 0.5f + (1.0f * rand() / (float)RAND_MAX)},
-                                                             MatrixIdentity()});
+            registry.emplace<TransformComponent>(asteroidEntity, TransformComponent{
+                                                                     Vector3{
+                                                                         ((rand() - rand()) / (float)RAND_MAX) * scalar,
+                                                                         ((rand() - rand()) / (float)RAND_MAX) * scalar * 0.05f,
+                                                                         ((rand() - rand()) / (float)RAND_MAX) * scalar},
+                                                                     Vector3{
+                                                                         ((rand() - rand()) / (float)RAND_MAX) * 2 * PI,
+                                                                         ((rand() - rand()) / (float)RAND_MAX) * 2 * PI,
+                                                                         ((rand() - rand()) / (float)RAND_MAX) * 2 * PI},
+                                                                     Vector3{
+                                                                         0.5f + (1.0f * rand() / (float)RAND_MAX),
+                                                                         0.5f + (1.0f * rand() / (float)RAND_MAX),
+                                                                         0.5f + (1.0f * rand() / (float)RAND_MAX)},
+                                                                     MatrixIdentity()});
             // Attach a Model
             std::vector<int> meshIds = {0, 1, 2, 3};
             int materialId = 4;
-            registry.emplace<ModelComponent>(entity, ModelComponent{
-                                                         meshIds,
-                                                         materialId});
+            registry.emplace<ModelComponent>(asteroidEntity, ModelComponent{
+                                                                 meshIds,
+                                                                 materialId});
 
             // Attach a Visibility
-            registry.emplace<VisibilityComponent>(entity, VisibilityComponent{});
-            registry.emplace<AsteroidComponent>(entity, AsteroidComponent{
-                                                            Vector3{
-                                                                ((rand() - rand()) / (float)RAND_MAX) * 0.01f,
-                                                                ((rand() - rand()) / (float)RAND_MAX) * 0.01f,
-                                                                ((rand() - rand()) / (float)RAND_MAX) * 0.01f}
-                                                        });
+            registry.emplace<VisibilityComponent>(asteroidEntity, VisibilityComponent{});
+            registry.emplace<AsteroidComponent>(asteroidEntity, AsteroidComponent{
+                                                                    Vector3{
+                                                                        ((rand() - rand()) / (float)RAND_MAX) * 0.01f,
+                                                                        ((rand() - rand()) / (float)RAND_MAX) * 0.01f,
+                                                                        ((rand() - rand()) / (float)RAND_MAX) * 0.01f}});
         }
+
+        auto cameraEntity = registry.create();
+        registry.emplace<TransformComponent>(cameraEntity, TransformComponent{
+                                                                     Vector3{0.0f, 10.0f, 0.0f},
+                                                                     Vector3{0,0,0},
+                                                                     Vector3{1.0, 1.0, 1.0},
+                                                                     MatrixIdentity()});
+        registry.emplace<CameraComponent>(cameraEntity, CameraComponent{
+                                                            60.0f,
+                                                            Matrix(),
+                                                            RenderTarget{
+                                                                Rectangle{0, 0, 1920, -1080},
+                                                                Rectangle{0, 0, 1920, 1080},
+                                                                Vector2{0, 0},
+                                                                0.0f,
+                                                                WHITE}});
     }
 
     void OnUpdate(entt::registry &registry) override

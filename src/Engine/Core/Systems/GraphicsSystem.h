@@ -5,6 +5,7 @@
 #include "Engine/Core/Components/ModelComponent.h"
 #include "Engine/Core/Components/VisibilityComponent.h"
 #include "Engine/Core/Components/InstanceBinComponent.h"
+#include "Engine/Core/Components/CameraComponent.h"
 #include "Engine/Core/AssetManager.h"
 #include "Engine/Core/Systems/VisibilitySystem.h"
 
@@ -21,20 +22,16 @@
 #include "rlImGui.h"
 #include "imgui.h"
 
-#define RENDER_TO_TEXTURE
+
 
 class GraphicsSystem : public SystemBase
 {
     Camera3D camera;
     uint8_t FrameCount = 0;
 
-#ifdef RENDER_TO_TEXTURE
     bool RenderToTexture = true;
+    //RenderTarget target;
     RenderTexture2D renderTex;
-    Rectangle sourceRect;
-    Rectangle destRect;
-    Vector2 Origin;
-#endif
 
     bool DebugGuiActive = false;
 
@@ -50,18 +47,19 @@ class GraphicsSystem : public SystemBase
         camera.projection = CAMERA_PERSPECTIVE;         // Camera mode type
         SetCameraMode(camera, CAMERA_FIRST_PERSON);     // Set a free camera mode
 
-#ifdef RENDER_TO_TEXTURE
-        destRect.width = 1920;
-        destRect.height = 1080;
-        destRect.x = 0;
-        destRect.y = 0;
-        renderTex = LoadRenderTexture(destRect.width, destRect.height);
-        sourceRect.width = renderTex.texture.width;
-        sourceRect.height = -renderTex.texture.height;
-        sourceRect.x = 0;
-        sourceRect.y = 0;
-#endif
+        //target.DestRect = Rectangle{0, 0, 1920, 1080};
+        //target.SourceRect = Rectangle{0, 0, 1920, -1080};
+        //target.Angle = 0.0f;
+        //target.Tint = WHITE;
+        std::cout << "Generating render buffer\n";
+        renderTex = LoadRenderTexture(1920, 1080);
+        std::cout << "====\n";
+
         rlImGuiSetup(true); // sets up ImGui with ether a dark or light default theme
+
+        #ifndef NDEBUG
+        DebugGuiActive = true;
+        #endif
     }
 
     void OnUpdate(entt::registry &registry) override
@@ -70,22 +68,30 @@ class GraphicsSystem : public SystemBase
         int entityCount = 0;
         int batchCount = 0;
 
+        auto camerasView = registry.view<CameraComponent, TransformComponent>();
+        RenderTarget target;
+        for (auto entity : camerasView)
+        {
+            CameraComponent cam = camerasView.get<CameraComponent>(entity);
+            auto &transform = camerasView.get<TransformComponent>(entity);
+            camera.position = transform.Translation;
+            target = cam.Target;
+        }
+
         BeginDrawing();
 
-#ifdef RENDER_TO_TEXTURE
         if (RenderToTexture)
         {
             BeginTextureMode(renderTex);
             ClearBackground(BLANK);
+            #ifndef NDEBUG
+            DrawText("Buffer 0", 100, 200, 32, Color{0x00, 0xFF, 0xFF, 0x8F});
+            #endif
         }
         else
         {
-#endif
-
             ClearBackground(BLACK);
-#ifdef RENDER_TO_TEXTURE
         }
-#endif
 
         BeginMode3D(camera);
         if (VisibilitySystem::UpdateFrustum)
@@ -115,19 +121,25 @@ class GraphicsSystem : public SystemBase
         DrawGrid(10, 1.0f);
 
         EndMode3D();
-#ifdef RENDER_TO_TEXTURE
+
         if (RenderToTexture)
         {
             EndTextureMode();
-            // BeginDrawing();
             ClearBackground(BLACK);
-            DrawTexturePro(renderTex.texture, sourceRect, destRect, Origin, 0.0f, WHITE);
+            DrawTexturePro(renderTex.texture, target.SourceRect, target.DestRect, target.Origin, target.Angle, target.Tint);
         }
-#endif
 
         if (IsKeyReleased(KEY_Q))
         {
             DebugGuiActive = !DebugGuiActive;
+            if (DebugGuiActive)
+            {
+                EnableCursor();
+            }
+            else
+            {
+                DisableCursor();
+            }
         }
 
         if (DebugGuiActive)
@@ -137,9 +149,9 @@ class GraphicsSystem : public SystemBase
             // ImGui::ShowDemoWindow(&open);
 
             ImGui::Begin("GraphicsSystem");
-#ifdef RENDER_TO_TEXTURE
+
             ImGui::Checkbox("Use Render Buffers", &RenderToTexture);
-#endif
+
             ImGui::Text("Drawn Entities: %d", entityCount);
             ImGui::Text("Triangles: %d", TriangleCount);
             ImGui::Text("FPS: %d", GetFPS());
@@ -151,15 +163,19 @@ class GraphicsSystem : public SystemBase
             ImGui::Checkbox("Automatic LOD", &VisibilitySystem::AutomaticBias);
             ImGui::InputFloat("LOD Bias", &VisibilitySystem::LodBias);
             ImGui::InputFloat("Target FPS", &VisibilitySystem::TargetFps);
-            ImGui::Text("Average FPS: %f", VisibilitySystem::AverageFps);
+            ImGui::Text("Average FPS: %d", (int)VisibilitySystem::AverageFps);
             ImGui::End();
             rlImGuiEnd();
         }
-        
-        if(!DebugGuiActive || IsMouseButtonDown(MOUSE_BUTTON_RIGHT))
+
+        if (!DebugGuiActive || IsMouseButtonDown(MOUSE_BUTTON_RIGHT))
         {
             UpdateCamera(&camera);
         }
+
+#ifndef NDEBUG
+        DrawText("DEBUG", 1000, 100, 32, Color{0xFF, 0x00, 0x00, 0x8F});
+#endif
 
         EndDrawing();
 

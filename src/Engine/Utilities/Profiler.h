@@ -36,7 +36,7 @@ public:
         return timestamp;
     }
 
-    static void Stop(char const *label, TimestampComponent *timestampComponent) {
+    static void Stop(TimestampComponent *timestampComponent) {
         auto stopTimestamp = std::chrono::high_resolution_clock::now();
 
         timestampComponent->stopTimestamp = stopTimestamp;

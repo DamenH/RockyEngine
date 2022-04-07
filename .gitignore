@@ -2,6 +2,7 @@
 .vscode
 
 cmake-build-debug
+cmake-build-release
 
 lib
 
@@ -13,5 +14,4 @@ CMakeCache.txt
 CPackConfig.cmake
 CPackSourceConfig.cmake
 
-third_party
 media

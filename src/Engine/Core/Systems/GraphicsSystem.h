@@ -16,7 +16,9 @@
 #include <stdlib.h>
 #include <vector>
 #include <rlgl.h>
+
 #define RLIGHTS_IMPLEMENTATION
+
 #include "rlights.h"
 
 #include "rlImGui.h"
@@ -24,8 +26,7 @@
 
 
 
-class GraphicsSystem : public SystemBase
-{
+class GraphicsSystem : public SystemBase {
     Camera3D camera;
     uint8_t FrameCount = 0;
 
@@ -40,9 +41,9 @@ class GraphicsSystem : public SystemBase
         // Camera struct initialization
         // TODO: Eliminate RayLib camera struct
         camera = {0};
-        camera.position = (Vector3){0.0f, 10.0f, 0.0f}; // Camera position
-        camera.target = (Vector3){0.0f, 0.0f, 0.0f};    // Camera looking at point
-        camera.up = (Vector3){0.0f, 1.0f, 0.0f};        // Camera up vector (rotation towards target)
+        camera.position = (Vector3) {0.0f, 10.0f, 0.0f}; // Camera position
+        camera.target = (Vector3) {0.0f, 0.0f, 0.0f};    // Camera looking at point
+        camera.up = (Vector3) {0.0f, 1.0f, 0.0f};        // Camera up vector (rotation towards target)
         camera.fovy = 60.0f;                            // Camera field-of-view Y
         camera.projection = CAMERA_PERSPECTIVE;         // Camera mode type
         SetCameraMode(camera, CAMERA_FIRST_PERSON);     // Set a free camera mode
@@ -62,8 +63,7 @@ class GraphicsSystem : public SystemBase
         #endif
     }
 
-    void OnUpdate(entt::registry &registry) override
-    {
+    void OnUpdate(entt::registry &registry) override {
         int TriangleCount = 0;
         int entityCount = 0;
         int batchCount = 0;

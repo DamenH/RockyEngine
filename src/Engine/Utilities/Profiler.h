@@ -22,7 +22,7 @@ class Profiler
 private:
     inline static TimestampComponent *currentFrameTimestamp;
     inline static std::vector<std::tuple<char *, DebugCallback>> DebugGuiCallbacks;
-    inline static std::unordered_map<unsigned int, std::tuple<char *, float>> Measurements;
+    inline static std::unordered_map<unsigned int, std::tuple<char *, float, float>> Measurements;
 
 public:
     static TimestampComponent *Start(char const *label, entt::registry &registry)
@@ -74,7 +74,9 @@ public:
         {
             auto &timestamp = timestampView.get<TimestampComponent>(entity);
             auto delta = std::chrono::duration_cast<std::chrono::microseconds>(timestamp.stopTimestamp - timestamp.startTimestamp).count();
-            Measurements[entt::hashed_string::value(timestamp.label.data())] = std::make_tuple(timestamp.label.data(), delta);
+            float average = get<2>(Measurements[entt::hashed_string::value(timestamp.label.data())]);
+            average = ((119.0f * average) + delta) / 120.0f;
+            Measurements[entt::hashed_string::value(timestamp.label.data())] = std::make_tuple(timestamp.label.data(), delta, average);
             registry.erase<TimestampComponent>(entity);
         }
     }
@@ -87,9 +89,10 @@ public:
     static void DebugGuiCallback()
     {
         ImGui::Text("Measurements: %d", (int)Measurements.size());
+        auto FrameMeasurement = Measurements[entt::hashed_string::value("Frame")];
         for (const auto &[key, value] : Measurements)
         {
-            ImGui::Text("%s = %dus", get<0>(value), (int)get<1>(value));
+            ImGui::Text("%*d%% %s = %dus, avg %dus", 3,(int)(100.0f * get<2>(value) / get<2>(FrameMeasurement)), get<0>(value), (int)get<1>(value), (int)get<2>(value));
         }
     }
 };

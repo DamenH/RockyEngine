@@ -50,10 +50,11 @@ void Application::InitializeSystems() {
 }
 
 void Application::UpdateSystems() {
-    Profiler::Start("Frame", registry);
+    auto timestamp = Profiler::Start("Frame", registry);
     for (uint8_t i = 0; i < systemsIndex; i++) {
         systems[i]->OnUpdate(registry);
     }
+    Profiler::Stop(timestamp, registry);
 }
 
 void Application::Run() {

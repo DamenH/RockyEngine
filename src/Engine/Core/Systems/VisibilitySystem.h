@@ -7,11 +7,15 @@
 #include "Engine/Core/Components/VisibilityComponent.h"
 #include "Engine/Core/Components/CameraComponent.h"
 #include "Engine/Core/Components/InstanceBinComponent.h"
+#include "Engine/Utilities/Profiler.h"
+#include "Engine/Utilities/Debug.h"
+
 
 #include <entt/entt.hpp>
 #include <raylib.h>
 #include <raymath.h>
 #include "RLFrustum.h"
+#include "imgui.h"
 
 // Responsible for culling, LoD, model transform calculation, and mesh instance binning
 class VisibilitySystem : public SystemBase
@@ -20,6 +24,8 @@ class VisibilitySystem : public SystemBase
 
     std::vector<std::tuple<int, int>> modelIndices;   // Unique <Mesh ID, Material ID> permutation
     std::vector<std::vector<Matrix>> transformArrays; // For every model there's a vector of transform matrices
+
+    uint8_t FrameCount = 0;
 
 public:
     inline static float LodBias = 1.0f;
@@ -44,10 +50,14 @@ public:
         TargetFps = 60;
         AutomaticBias = false;
 #endif
+        Debug::RegisterCallback("VisibilitySystem", &DebugGuiCallback);
     }
 
     void OnUpdate(entt::registry &registry) override
     {
+        auto profTimeStamp = Profiler::Start("VisibilitySystem", registry);
+
+        FrameCount++;
         AverageFps = ((3.0f * AverageFps) + GetFPS()) / 4.0f;
         if (AutomaticBias)
         {
@@ -100,9 +110,7 @@ public:
 
             // TODO: View Frustum Culling. Temporary nonsense conditional.
             if (distance > MaxDistance || !InFrustum(CullingCamera, transform.Translation))
-            {
                 continue;
-            }
 
             // If not culled, identify the specific mesh to be used based on LOD
             // TODO: Improve LOD selection to logarithmic distance or something
@@ -110,10 +118,6 @@ public:
             x = std::clamp(x, 0.0f, 1.0f);                     // Clamp between 0.0 and 1.0
             x = x * (model.Meshes.size() - 1);                 // Scale to number of LODs
             int meshId = (int)std::floor(x);
-            if (meshId >= 4)
-            {
-                std::cout << "Invalid meshId: " << meshId << "\n";
-            }
 
             // Create tuple representing this specific combination of Mesh and Material
             std::tuple<int, int> modelId = std::make_tuple(meshId, model.Material);
@@ -184,14 +188,26 @@ public:
             transformArrays[i].clear();
         }
         modelIndices.clear();
+
+        Profiler::Stop(profTimeStamp, registry);
+
+        /*if(FrameCount == 0)
+        {
+            std::cout << profTimeStamp->label.data() << "\t" << std::chrono::duration_cast<std::chrono::microseconds>(profTimeStamp->stopTimestamp - profTimeStamp->startTimestamp).count() << "us\n";
+        }*/
     }
 
     bool InFrustum(Camera camera, Vector3 point)
     {
-        // RLFrustum frustum;
-        // frustum.Extract();
         return frustum.PointIn(point);
+    }
 
-        // return point.x >= 0 && point.z >= 0;
+    static void DebugGuiCallback()
+    {
+        ImGui::Checkbox("Update Frustum", &UpdateFrustum);
+        ImGui::Checkbox("Automatic LOD", &AutomaticBias);
+        ImGui::InputFloat("LOD Bias", &LodBias);
+        ImGui::InputFloat("Target FPS", &TargetFps);
+        ImGui::Text("Average FPS: %d", (int)AverageFps);
     }
 };

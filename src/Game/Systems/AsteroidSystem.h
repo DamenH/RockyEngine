@@ -9,6 +9,7 @@
 #include "Engine/Core/AssetManager.h"
 #include "Engine/Core/Systems/VisibilitySystem.h"
 #include "Engine/Core/Systems/GraphicsSystem.h"
+#include "Engine/Utilities/Profiler.h"
 
 #include <entt/entt.hpp>
 #include <raylib.h>
@@ -99,6 +100,7 @@ class AsteroidSystem : public SystemBase
 
     void OnUpdate(entt::registry &registry) override
     {
+        auto profTimeStamp = Profiler::Start("AsteroidSystem", registry);
         auto view = registry.view<TransformComponent, AsteroidComponent>();
 
         for (auto entity : view)
@@ -110,5 +112,7 @@ class AsteroidSystem : public SystemBase
             transform.Rotation.y += asteroid.Rotation.y;
             transform.Rotation.z += asteroid.Rotation.z;
         }
+
+        Profiler::Stop(profTimeStamp, registry);
     }
 };

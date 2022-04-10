@@ -114,6 +114,8 @@ public:
         auto FrameMeasurement = Measurements[entt::hashed_string::value("Frame")];
         if (ImPlot::BeginPlot("Execution Time (us)"))
         {
+            //(const char* x_label, const char* y_label, ImPlotAxisFlags x_flags, ImPlotAxisFlags y_flags)
+            ImPlot::SetupAxes(NULL, "us", ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit);
             for (const auto &[key, value] : Measurements)
             {
                 if (value.samples.size() > 0)

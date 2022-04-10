@@ -112,13 +112,14 @@ public:
     static void DebugGuiCallback()
     {
         auto FrameMeasurement = Measurements[entt::hashed_string::value("Frame")];
+        std::vector<float> Averages;
+        std::vector<const char *> Labels;
         if (ImPlot::BeginPlot("Execution Time (us)"))
         {
-            //(const char* x_label, const char* y_label, ImPlotAxisFlags x_flags, ImPlotAxisFlags y_flags)
             ImPlot::SetupAxes(NULL, "us", ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit);
             for (const auto &[key, value] : Measurements)
             {
-                if (value.samples.size() > 0)
+                if (key != entt::hashed_string::value("Frame") && value.samples.size() > 0)
                 {
                     /*ImGui::Text("%*d%% %s = %dus, avg %dus",
                                 3, (int)(100.0f * value.average / FrameMeasurement.average),
@@ -127,8 +128,18 @@ public:
                                 (int)value.average);*/
 
                     ImPlot::PlotLine(value.label.data(), value.sampleIndices.data(), value.samples.data(), value.sampleIndices.size());
+                    Averages.push_back(value.average);
+                    Labels.push_back(value.label.data());
                 }
             }
+            ImPlot::EndPlot();
+        }
+        if (ImPlot::BeginPlot("Frame Portion", ImVec2(300, 300), ImPlotFlags_Equal | ImPlotFlags_NoMouseText))
+        {
+            ImPlot::SetupAxes(NULL, NULL, ImPlotAxisFlags_NoDecorations, ImPlotAxisFlags_NoDecorations);
+            ImPlot::SetupAxesLimits(0, 1, 0, 1);
+            // PlotPieChart(const char* const label_ids[], const T* values, int count, double x, double y, double radius, bool normalize, const char* fmt, double angle0)
+            ImPlot::PlotPieChart(Labels.data(), Averages.data(), Labels.size(), 0.5, 0.5, 0.4, true, "%.2f");
             ImPlot::EndPlot();
         }
     }

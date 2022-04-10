@@ -74,7 +74,7 @@ class GraphicsSystem : public SystemBase
         {
             CameraComponent cam = camerasView.get<CameraComponent>(entity);
             auto &transform = camerasView.get<TransformComponent>(entity);
-            camera.position = transform.Translation;
+            //camera.position = transform.Translation;
             target = cam.Target;
         }
 

@@ -111,7 +111,6 @@ public:
 
     static void DebugGuiCallback()
     {
-        ImGui::Text("Measurements: %d", (int)Measurements.size());
         auto FrameMeasurement = Measurements[entt::hashed_string::value("Frame")];
         if (ImPlot::BeginPlot("Execution Time (us)"))
         {
@@ -119,11 +118,11 @@ public:
             {
                 if (value.samples.size() > 0)
                 {
-                    ImGui::Text("%*d%% %s = %dus, avg %dus",
+                    /*ImGui::Text("%*d%% %s = %dus, avg %dus",
                                 3, (int)(100.0f * value.average / FrameMeasurement.average),
                                 value.label.data(),
                                 (int)value.samples.back(),
-                                (int)value.average);
+                                (int)value.average);*/
 
                     ImPlot::PlotLine(value.label.data(), value.sampleIndices.data(), value.samples.data(), value.sampleIndices.size());
                 }

@@ -13,3 +13,6 @@
 [submodule "third_party/rlImGui"]
 	path = third_party/rlImGui
 	url = git@github.com:raylib-extras/rlImGui.git
+[submodule "third_party/implot"]
+	path = third_party/implot
+	url = git@github.com:epezent/implot.git

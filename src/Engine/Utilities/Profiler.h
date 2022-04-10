@@ -16,13 +16,20 @@ struct TimestampComponent
     std::chrono::high_resolution_clock::time_point stopTimestamp;
 };
 
+struct Measurement
+{
+    std::array<char, LABEL_LENGTH> label;
+    std::vector<float> samples;
+    float average;
+};
+
 class Profiler
 {
 
 private:
     inline static TimestampComponent *currentFrameTimestamp;
     inline static std::vector<std::tuple<char *, DebugCallback>> DebugGuiCallbacks;
-    inline static std::unordered_map<unsigned int, std::tuple<char *, float, float>> Measurements;
+    inline static std::unordered_map<unsigned int, Measurement> Measurements;
 
 public:
     static TimestampComponent *Start(char const *label, entt::registry &registry)
@@ -73,17 +80,29 @@ public:
         for (auto entity : timestampView)
         {
             auto &timestamp = timestampView.get<TimestampComponent>(entity);
-            auto delta = std::chrono::duration_cast<std::chrono::microseconds>(timestamp.stopTimestamp - timestamp.startTimestamp).count();
-            float average = get<2>(Measurements[entt::hashed_string::value(timestamp.label.data())]);
-            average = ((119.0f * average) + delta) / 120.0f;
-            Measurements[entt::hashed_string::value(timestamp.label.data())] = std::make_tuple(timestamp.label.data(), delta, average);
+            float delta = std::chrono::duration_cast<std::chrono::microseconds>(timestamp.stopTimestamp - timestamp.startTimestamp).count();
+
+            Measurement m = Measurements[entt::hashed_string::value(timestamp.label.data())];
+            m.label = timestamp.label;
+            m.samples.push_back(delta);
+            if (m.samples.size() > 240)
+            {
+                std::cout << "Truncating " << m.label.data() << "\n";
+                while (m.samples.size() > 120)
+                {
+                    m.samples.erase(m.samples.begin());
+                }
+            }
+            m.average = ((99.0f * m.average) + delta) / 100.0f;
+            Measurements[entt::hashed_string::value(timestamp.label.data())] = m;
+
             registry.erase<TimestampComponent>(entity);
         }
     }
 
     static void Initialize()
     {
-        Debug::RegisterCallback((char*)"Profiler", &DebugGuiCallback);
+        Debug::RegisterCallback((char *)"Profiler", &DebugGuiCallback);
     }
 
     static void DebugGuiCallback()
@@ -92,7 +111,7 @@ public:
         auto FrameMeasurement = Measurements[entt::hashed_string::value("Frame")];
         for (const auto &[key, value] : Measurements)
         {
-            ImGui::Text("%*d%% %s = %dus, avg %dus", 3,(int)(100.0f * get<2>(value) / get<2>(FrameMeasurement)), get<0>(value), (int)get<1>(value), (int)get<2>(value));
+            ImGui::Text("%*d%% %s = %dus, avg %dus", 3, (int)(100.0f * value.average / FrameMeasurement.average), value.label.data(), (int)value.samples.back(), (int)value.average);
         }
     }
 };

@@ -161,11 +161,6 @@ class GraphicsSystem : public SystemBase
         FrameCount++;
 
         Profiler::Stop(profTimeStamp, registry);
-
-        /*if(FrameCount == 0)
-        {
-            std::cout << profTimeStamp->label.data() << "\t" << std::chrono::duration_cast<std::chrono::microseconds>(profTimeStamp->stopTimestamp - profTimeStamp->startTimestamp).count() << "us\n";
-        }*/
     }
 
     static void DebugGuiCallback()

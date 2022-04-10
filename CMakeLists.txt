@@ -27,6 +27,8 @@ add_executable(Game
         src/Engine/Core/AssetManager.cpp
         src/Engine/Core/Systems/RLFrustrum.cpp
         third_party/rlImGui/rlImGui.cpp
+        third_party/implot/implot.cpp
+        third_party/implot/implot_items.cpp
         src/Engine/Utilities/Profiler.h)
 
 
@@ -35,6 +37,7 @@ target_include_directories(Game
         PRIVATE
         "${CMAKE_SOURCE_DIR}/third_party/entt/src"
         "${CMAKE_SOURCE_DIR}/third_party/rlImGui"
+        "${CMAKE_SOURCE_DIR}/third_party/implot"
         "${CMAKE_SOURCE_DIR}/src/Engine/Core/Systems/"
         "${CMAKE_SOURCE_DIR}/src")
 

@@ -2,6 +2,7 @@
 
 #include "rlImGui.h"
 #include "imgui.h"
+#include "implot.h"
 #include <vector>
 
 typedef void (*DebugCallback)(void);
@@ -24,6 +25,7 @@ public:
     inline static void Initialize()
     {
         rlImGuiSetup(true);
+        ImPlot::CreateContext();
     }
 
     // Starts an imGUI session and invokes all the callbacks in turn

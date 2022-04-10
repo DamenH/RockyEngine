@@ -2,12 +2,14 @@
 
 #include "Debug.h"
 #include "imgui.h"
+#include "implot.h"
 
 #include <cstdint>
 #include <chrono>
 #include <entt/entt.hpp>
 
 #define LABEL_LENGTH 32
+#define SAMPLE_LENGTH 1024
 
 struct TimestampComponent
 {
@@ -19,7 +21,9 @@ struct TimestampComponent
 struct Measurement
 {
     std::array<char, LABEL_LENGTH> label;
-    std::vector<float> samples;
+    std::vector<int> samples;
+    std::vector<int> sampleIndices;
+    int sampleCount;
     float average;
 };
 
@@ -84,14 +88,14 @@ public:
 
             Measurement m = Measurements[entt::hashed_string::value(timestamp.label.data())];
             m.label = timestamp.label;
-            m.samples.push_back(delta);
-            if (m.samples.size() > 240)
+            m.samples.push_back((int)delta);
+            if (m.sampleIndices.size() < SAMPLE_LENGTH)
             {
-                std::cout << "Truncating " << m.label.data() << "\n";
-                while (m.samples.size() > 120)
-                {
-                    m.samples.erase(m.samples.begin());
-                }
+                m.sampleIndices.push_back(m.sampleCount++);
+            }
+            while (m.samples.size() > SAMPLE_LENGTH)
+            {
+                m.samples.erase(m.samples.begin());
             }
             m.average = ((99.0f * m.average) + delta) / 100.0f;
             Measurements[entt::hashed_string::value(timestamp.label.data())] = m;
@@ -109,9 +113,22 @@ public:
     {
         ImGui::Text("Measurements: %d", (int)Measurements.size());
         auto FrameMeasurement = Measurements[entt::hashed_string::value("Frame")];
-        for (const auto &[key, value] : Measurements)
+        if (ImPlot::BeginPlot("Execution Time (us)"))
         {
-            ImGui::Text("%*d%% %s = %dus, avg %dus", 3, (int)(100.0f * value.average / FrameMeasurement.average), value.label.data(), (int)value.samples.back(), (int)value.average);
+            for (const auto &[key, value] : Measurements)
+            {
+                if (value.samples.size() > 0)
+                {
+                    ImGui::Text("%*d%% %s = %dus, avg %dus",
+                                3, (int)(100.0f * value.average / FrameMeasurement.average),
+                                value.label.data(),
+                                (int)value.samples.back(),
+                                (int)value.average);
+
+                    ImPlot::PlotLine(value.label.data(), value.sampleIndices.data(), value.samples.data(), value.sampleIndices.size());
+                }
+            }
+            ImPlot::EndPlot();
         }
     }
 };

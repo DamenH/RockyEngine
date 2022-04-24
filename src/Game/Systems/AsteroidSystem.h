@@ -18,6 +18,7 @@
 #include <stdlib.h>
 #include <vector>
 #include <rlgl.h>
+#include "RLFrustum.h"
 
 struct Planet {
     Vector3 Transform{
@@ -36,17 +37,8 @@ double G = 6.673e-11;
 
 class AsteroidSystem : public SystemBase {
     Camera3D camera;
-    uint8_t FrameCount = 0;
+    RLFrustum cameraFrustum;
 
-#ifdef RENDER_TO_TEXTURE
-    bool RenderToTexture = true;
-    RenderTexture2D renderTex;
-    Rectangle sourceRect;
-    Rectangle destRect;
-    Vector2 Origin;
-#endif
-
-    bool DebugGuiActive = false;
 
     void OnStartup(entt::registry &registry) override {
         std::cout << "Generating scene\n";
@@ -111,19 +103,21 @@ class AsteroidSystem : public SystemBase {
 
         auto cameraEntity = registry.create();
         registry.emplace<TransformComponent>(cameraEntity, TransformComponent{
-                Vector3{0.0f, 10.0f, 0.0f},
-                Vector3{0, 0, 0},
-                Vector3{1.0, 1.0, 1.0},
-                MatrixIdentity()});
+                                                                     Vector3{0.0f, 10.0f, 0.0f},
+                                                                     Vector3{0,0,0},
+                                                                     Vector3{1.0, 1.0, 1.0},
+                                                                     MatrixIdentity()});
+        
         registry.emplace<CameraComponent>(cameraEntity, CameraComponent{
-                60.0f,
-                Matrix(),
-                RenderTarget{
-                        Rectangle{0, 0, 1920, -1080},
-                        Rectangle{0, 0, 1920, 1080},
-                        Vector2{0, 0},
-                        0.0f,
-                        WHITE}});
+                                                            60.0f,
+                                                            Matrix(),
+                                                            RenderTarget{
+                                                                Rectangle{0, 0, 1920, -1080},
+                                                                Rectangle{0, 0, 1920, 1080},
+                                                                Vector2{0, 0},
+                                                                0.0f,
+                                                                WHITE},
+                                                                &cameraFrustum});
     }
 
     void OnUpdate(entt::registry &registry) override {

@@ -1,5 +1,6 @@
 #pragma once
 #include <raylib.h>
+#include "RLFrustum.h"
 
 struct RenderTarget
 {
@@ -14,6 +15,7 @@ struct CameraComponent {
     float FoV;
     Matrix ViewProjectionTransform;
     RenderTarget Target;
+    RLFrustum* Frustum;
 };
 
 

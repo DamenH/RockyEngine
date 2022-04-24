@@ -23,6 +23,8 @@
 
 #include "rlights.h"
 
+#define BUFFER_COUNT 8
+
 class GraphicsSystem : public SystemBase
 {
     inline static Camera3D camera;
@@ -30,9 +32,10 @@ class GraphicsSystem : public SystemBase
     inline static int TriangleCount = 0;
     inline static int entityCount = 0;
     inline static int batchCount = 0;
+    inline static int cameraCount = 0;
 
     inline static bool RenderToTexture = true;
-    inline static RenderTexture2D renderTex;
+    inline static std::vector<RenderTexture2D> renderBuffers;
 
     inline static bool DebugGuiActive = false;
 
@@ -50,8 +53,12 @@ class GraphicsSystem : public SystemBase
         camera.projection = CAMERA_PERSPECTIVE;         // Camera mode type
         SetCameraMode(camera, CAMERA_FIRST_PERSON);     // Set a free camera mode
 
-        std::cout << "Generating render buffer\n";
-        renderTex = LoadRenderTexture(1920, 1080);
+        std::cout << "Generating render buffers\n";
+        for (int i = 0; i < BUFFER_COUNT; i++)
+        {
+            RenderTexture2D t = LoadRenderTexture(1920, 1080);
+            renderBuffers.push_back(t);
+        }
         std::cout << "====\n";
 
 #ifndef NDEBUG
@@ -93,75 +100,75 @@ class GraphicsSystem : public SystemBase
         TriangleCount = 0;
         entityCount = 0;
         batchCount = 0;
+        cameraCount = 0;
 
         auto camerasView = registry.view<CameraComponent, TransformComponent>();
-        RenderTarget target;
         for (auto entity : camerasView)
         {
+            //std::cout << "Rendering Cam " << cameraCount++ << "\n";            
             CameraComponent cam = camerasView.get<CameraComponent>(entity);
             auto &transform = camerasView.get<TransformComponent>(entity);
-            // camera.position = transform.Translation;
-            target = cam.Target;
-        }
+            camera.position = transform.Translation;
 
-        BeginDrawing();
+            BeginDrawing();
 
-        if (RenderToTexture)
-        {
-            BeginTextureMode(renderTex);
-            ClearBackground(BLANK);
-#ifndef NDEBUG
-            DrawText("Buffer 0", 100, 200, 32, Color{0x00, 0xFF, 0xFF, 0x8F});
-#endif
-        }
-        else
-        {
-            ClearBackground(BLACK);
-        }
-
-        BeginMode3D(camera);
-        if (VisibilitySystem::UpdateFrustum)
-        {
-            VisibilitySystem::frustum.Extract();
-            VisibilitySystem::CullingCamera = camera;
-        }
-
-        // ====================================================================
-        // We are inside the cube, we need to disable backface culling!
-        rlDisableBackfaceCulling();
-        rlDisableDepthMask();
-        DrawModel(skybox, (Vector3){0, 0, 0}, 1.0f, WHITE);
-        rlEnableBackfaceCulling();
-        rlEnableDepthMask();
-        // ====================================================================
-
-        auto binsView = registry.view<InstanceBinComponent>();
-        for (auto entity : binsView)
-        {
-            InstanceBinComponent bin = binsView.get<InstanceBinComponent>(entity);
-            const Mesh mesh = AssetManager::GetMesh(bin.Mesh);
-            const Material material = AssetManager::GetMaterial(bin.Material);
-            const int count = bin.InstanceCount;
-            Matrix *array = bin.ModelTransforms.data();
-
-            DrawMeshInstanced(mesh, material, array, count);
-            TriangleCount += mesh.triangleCount * count;
-            entityCount += count;
-            if (count > 0)
+            if (RenderToTexture)
             {
-                batchCount++;
+                BeginTextureMode(renderBuffers[0]);
+                ClearBackground(BLANK);
+#ifndef NDEBUG
+                DrawText("Buffer 0", 100, 200, 32, Color{0x00, 0xFF, 0xFF, 0x8F});
+#endif
             }
-        }
+            else
+            {
+                ClearBackground(BLACK);
+            }
 
-        DrawGrid(10, 1.0f);
+            BeginMode3D(camera);
+            if (VisibilitySystem::UpdateFrustum)
+            {
+                cam.Frustum->Extract();
+            }
+            
 
-        EndMode3D();
+            // ====================================================================
+            // We are inside the cube, we need to disable backface culling!
+            rlDisableBackfaceCulling();
+            rlDisableDepthMask();
+            DrawModel(skybox, (Vector3){0, 0, 0}, 1.0f, WHITE);
+            rlEnableBackfaceCulling();
+            rlEnableDepthMask();
+            // ====================================================================
 
-        if (RenderToTexture)
-        {
-            EndTextureMode();
-            ClearBackground(BLACK);
-            DrawTexturePro(renderTex.texture, target.SourceRect, target.DestRect, target.Origin, target.Angle, target.Tint);
+            auto binsView = registry.view<InstanceBinComponent>();
+            for (auto entity : binsView)
+            {
+                InstanceBinComponent bin = binsView.get<InstanceBinComponent>(entity);
+                const Mesh mesh = AssetManager::GetMesh(bin.Mesh);
+                const Material material = AssetManager::GetMaterial(bin.Material);
+                const int count = bin.InstanceCount;
+                Matrix *array = bin.ModelTransforms.data();
+
+                DrawMeshInstanced(mesh, material, array, count);
+                TriangleCount += mesh.triangleCount * count;
+                entityCount += count;
+                if (count > 0)
+                {
+                    batchCount++;
+                }
+            }
+
+            DrawGrid(10, 1.0f);
+
+            EndMode3D();
+
+            if (RenderToTexture)
+            {
+                EndTextureMode();
+                ClearBackground(BLACK);
+                DrawTexturePro(renderBuffers[0].texture, cam.Target.SourceRect, cam.Target.DestRect, cam.Target.Origin, cam.Target.Angle, cam.Target.Tint);
+            }
         }
 
         if (IsKeyReleased(KEY_Q))

@@ -10,7 +10,6 @@
 #include "Engine/Utilities/Profiler.h"
 #include "Engine/Utilities/Debug.h"
 
-
 #include <entt/entt.hpp>
 #include <raylib.h>
 #include <raymath.h>
@@ -32,19 +31,10 @@ public:
     inline static float AverageFps = 120.0f;
     inline static float TargetFps = 120.0f;
     inline static bool AutomaticBias = true;
-    inline static Camera CullingCamera;
-    inline static RLFrustum frustum;
     inline static bool UpdateFrustum = true;
 
     void OnStartup(entt::registry &registry) override
     {
-        // TODO: Eliminate RayLib camera struct
-        CullingCamera = {0};
-        CullingCamera.position = (Vector3){0.0f, 10.0f, 0.0f}; // Camera position
-        CullingCamera.target = (Vector3){0.0f, 0.0f, 0.0f};    // Camera looking at point
-        CullingCamera.up = (Vector3){0.0f, 1.0f, 0.0f};        // Camera up vector (rotation towards target)
-        CullingCamera.fovy = 60.0f;                            // Camera field-of-view Y
-        CullingCamera.projection = CAMERA_PERSPECTIVE;         // Camera mode type
 
 #ifndef NDEBUG
         TargetFps = 60;
@@ -78,76 +68,81 @@ public:
         }
 
         auto renderablesView = registry.view<ModelComponent, TransformComponent, VisibilityComponent>();
-        auto cameraView = registry.view<CameraComponent, TransformComponent>();
-
-        Vector3 cameraLocation = CullingCamera.position; // Temporary until Camera component is implemented
-
-        for (auto entity : renderablesView) // For every renderable entity
+        auto camerasView = registry.view<CameraComponent, TransformComponent>();
+        int cameraCount = 0;
+        for (auto entity : camerasView)
         {
-            // Fetch the Transform and Model components of the current entity
-            auto &transform = renderablesView.get<TransformComponent>(entity);
-            auto &model = renderablesView.get<ModelComponent>(entity);
+            //std::cout << "Visualizing Cam " << cameraCount++ << "\n";
 
-            // Calculate the entity's Transform matrix
+            CameraComponent cam = camerasView.get<CameraComponent>(entity);
+            auto &camTransform = camerasView.get<TransformComponent>(entity);
 
-            // Scale
-            Matrix transformMatrix = MatrixScale(transform.Scale.x,
-                                                 transform.Scale.y,
-                                                 transform.Scale.z);
-
-            // Rotation Scale
-            transformMatrix = MatrixMultiply(transformMatrix, MatrixRotateXYZ(transform.Rotation));
-
-            // Translation
-            transformMatrix = MatrixMultiply(transformMatrix, MatrixTranslate(transform.Translation.x,
-                                                                              transform.Translation.y,
-                                                                              transform.Translation.z));
-
-            // Store the calculated transform for any other systems that need it
-            transform.Transform = transformMatrix;
-
-            float distance = abs(cameraLocation.x - transform.Translation.x) + abs(cameraLocation.y - transform.Translation.y) + abs(cameraLocation.z - transform.Translation.z);
-
-            // TODO: View Frustum Culling. Temporary nonsense conditional.
-            if (distance > MaxDistance || !InFrustum(CullingCamera, transform.Translation))
-                continue;
-
-            // If not culled, identify the specific mesh to be used based on LOD
-            // TODO: Improve LOD selection to logarithmic distance or something
-            float x = LodBias * 2.0f * distance / MaxDistance; // Base function
-            x = std::clamp(x, 0.0f, 1.0f);                     // Clamp between 0.0 and 1.0
-            x = x * (model.Meshes.size() - 1);                 // Scale to number of LODs
-            int meshId = (int)std::floor(x);
-
-            // Create tuple representing this specific combination of Mesh and Material
-            std::tuple<int, int> modelId = std::make_tuple(meshId, model.Material);
-            // Find the location of this tuple in the models vector, if it is there
-            std::vector<std::tuple<int, int>>::iterator modelIndex = std::find(modelIndices.begin(), modelIndices.end(), modelId);
-            if (modelIndex != modelIndices.end())
+            for (auto entity : renderablesView) // For every renderable entity
             {
-                // If the combination is already present, add the matrix to the
-                transformArrays[std::distance(modelIndices.begin(), modelIndex)].push_back(transformMatrix);
-            }
-            else
-            {
-                // The combination isn't already present, so push it onto the models vector
-                modelIndices.push_back(modelId);
+                // Fetch the Transform and Model components of the current entity
+                auto &transform = renderablesView.get<TransformComponent>(entity);
+                auto &model = renderablesView.get<ModelComponent>(entity);
 
-                // ...and check if the transformArrays vector is big enough
-                if (transformArrays.size() < modelIndices.size())
+                // Calculate the entity's Transform matrix
+
+                // Scale
+                Matrix transformMatrix = MatrixScale(transform.Scale.x,
+                                                     transform.Scale.y,
+                                                     transform.Scale.z);
+
+                // Rotation Scale
+                transformMatrix = MatrixMultiply(transformMatrix, MatrixRotateXYZ(transform.Rotation));
+
+                // Translation
+                transformMatrix = MatrixMultiply(transformMatrix, MatrixTranslate(transform.Translation.x,
+                                                                                  transform.Translation.y,
+                                                                                  transform.Translation.z));
+
+                // Store the calculated transform for any other systems that need it
+                transform.Transform = transformMatrix;
+
+                float distance = abs(camTransform.Translation.x - transform.Translation.x) + abs(camTransform.Translation.y - transform.Translation.y) + abs(camTransform.Translation.z - transform.Translation.z);
+
+                // TODO: View Frustum Culling. Temporary nonsense conditional.
+                if (distance > MaxDistance || !InFrustum(cam.Frustum, transform.Translation))
+                    continue;
+
+                // If not culled, identify the specific mesh to be used based on LOD
+                // TODO: Improve LOD selection to logarithmic distance or something
+                float x = LodBias * 2.0f * distance / MaxDistance; // Base function
+                x = std::clamp(x, 0.0f, 1.0f);                     // Clamp between 0.0 and 1.0
+                x = x * (model.Meshes.size() - 1);                 // Scale to number of LODs
+                int meshId = (int)std::floor(x);
+
+                // Create tuple representing this specific combination of Mesh and Material
+                std::tuple<int, int> modelId = std::make_tuple(meshId, model.Material);
+                // Find the location of this tuple in the models vector, if it is there
+                std::vector<std::tuple<int, int>>::iterator modelIndex = std::find(modelIndices.begin(), modelIndices.end(), modelId);
+                if (modelIndex != modelIndices.end())
                 {
-                    std::cout << "Creating new vector<Matrix>\n";
-                    // If not, create a new vector and add it
-                    std::vector<Matrix> newBin = std::vector<Matrix>();
-                    transformArrays.push_back(newBin);
+                    // If the combination is already present, add the matrix to the
+                    transformArrays[std::distance(modelIndices.begin(), modelIndex)].push_back(transformMatrix);
                 }
-                // Push the entity's calculated transform matrix onto the vector
-                modelIndex = std::find(modelIndices.begin(), modelIndices.end(), modelId);
-                int i = std::distance(modelIndices.begin(), modelIndex);
-                transformArrays[i].push_back(transformMatrix);
+                else
+                {
+                    // The combination isn't already present, so push it onto the models vector
+                    modelIndices.push_back(modelId);
+
+                    // ...and check if the transformArrays vector is big enough
+                    if (transformArrays.size() < modelIndices.size())
+                    {
+                        std::cout << "Creating new vector<Matrix>\n";
+                        // If not, create a new vector and add it
+                        std::vector<Matrix> newBin = std::vector<Matrix>();
+                        transformArrays.push_back(newBin);
+                    }
+                    // Push the entity's calculated transform matrix onto the vector
+                    modelIndex = std::find(modelIndices.begin(), modelIndices.end(), modelId);
+                    int i = std::distance(modelIndices.begin(), modelIndex);
+                    transformArrays[i].push_back(transformMatrix);
+                }
             }
         }
-
         // Get all the current bin entities
         auto binsView = registry.view<InstanceBinComponent>();
         int binEntityCount = 0; // A counter to track how many bin entities currently exist
@@ -190,16 +185,12 @@ public:
         modelIndices.clear();
 
         Profiler::Stop(profTimeStamp, registry);
-
-        /*if(FrameCount == 0)
-        {
-            std::cout << profTimeStamp->label.data() << "\t" << std::chrono::duration_cast<std::chrono::microseconds>(profTimeStamp->stopTimestamp - profTimeStamp->startTimestamp).count() << "us\n";
-        }*/
     }
 
-    bool InFrustum(Camera camera, Vector3 point)
+    bool InFrustum(RLFrustum* frustum, Vector3 point)
     {
-        return frustum.PointIn(point);
+        return frustum->SphereIn(point, 10.0f);
+        //return frustum->PointIn(point);
     }
 
     static void DebugGuiCallback()

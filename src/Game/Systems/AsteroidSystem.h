@@ -18,6 +18,7 @@
 #include <stdlib.h>
 #include <vector>
 #include <rlgl.h>
+#include "RLFrustum.h"
 
 struct AsteroidComponent
 {
@@ -27,17 +28,8 @@ struct AsteroidComponent
 class AsteroidSystem : public SystemBase
 {
     Camera3D camera;
-    uint8_t FrameCount = 0;
+    RLFrustum cameraFrustum;
 
-#ifdef RENDER_TO_TEXTURE
-    bool RenderToTexture = true;
-    RenderTexture2D renderTex;
-    Rectangle sourceRect;
-    Rectangle destRect;
-    Vector2 Origin;
-#endif
-
-    bool DebugGuiActive = false;
 
     void OnStartup(entt::registry &registry) override
     {
@@ -87,6 +79,7 @@ class AsteroidSystem : public SystemBase
                                                                      Vector3{0,0,0},
                                                                      Vector3{1.0, 1.0, 1.0},
                                                                      MatrixIdentity()});
+        
         registry.emplace<CameraComponent>(cameraEntity, CameraComponent{
                                                             60.0f,
                                                             Matrix(),
@@ -95,7 +88,8 @@ class AsteroidSystem : public SystemBase
                                                                 Rectangle{0, 0, 1920, 1080},
                                                                 Vector2{0, 0},
                                                                 0.0f,
-                                                                WHITE}});
+                                                                WHITE},
+                                                                &cameraFrustum});
     }
 
     void OnUpdate(entt::registry &registry) override

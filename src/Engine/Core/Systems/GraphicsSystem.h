@@ -1,23 +1,23 @@
 #pragma once
 
-#include "Engine/Core/SystemBase.h"
-#include "Engine/Core/Components/TranformComponent.h"
-#include "Engine/Core/Components/ModelComponent.h"
-#include "Engine/Core/Components/VisibilityComponent.h"
-#include "Engine/Core/Components/InstanceBinComponent.h"
-#include "Engine/Core/Components/CameraComponent.h"
 #include "Engine/Core/AssetManager.h"
+#include "Engine/Core/Components/CameraComponent.h"
+#include "Engine/Core/Components/InstanceBinComponent.h"
+#include "Engine/Core/Components/ModelComponent.h"
+#include "Engine/Core/Components/TranformComponent.h"
+#include "Engine/Core/Components/VisibilityComponent.h"
+#include "Engine/Core/SystemBase.h"
 #include "Engine/Core/Systems/VisibilitySystem.h"
-#include "Engine/Utilities/Profiler.h"
 #include "Engine/Utilities/Debug.h"
+#include "Engine/Utilities/Profiler.h"
 
 #include <entt/entt.hpp>
+#include <iostream>
 #include <raylib.h>
 #include <raymath.h>
-#include <iostream>
+#include <rlgl.h>
 #include <stdlib.h>
 #include <vector>
-#include <rlgl.h>
 
 #define RLIGHTS_IMPLEMENTATION
 
@@ -71,25 +71,35 @@ class GraphicsSystem : public SystemBase
         // ====================================================================
         Mesh cube = GenMeshCube(1.0f, 1.0f, 1.0f);
         skybox = LoadModelFromMesh(cube);
-        skybox.materials[0].shader = LoadShader(TextFormat("../media/Shaders/skybox.vs", 330),
-                                                TextFormat("../media/Shaders/skybox.fs", 330));
+        skybox.materials[0].shader =
+            LoadShader(TextFormat("../media/Shaders/skybox.vs", 330), TextFormat("../media/Shaders/skybox.fs", 330));
 
-        SetShaderValue(skybox.materials[0].shader, GetShaderLocation(skybox.materials[0].shader, "environmentMap"), (int[1]){MATERIAL_MAP_CUBEMAP}, SHADER_UNIFORM_INT);
-        SetShaderValue(skybox.materials[0].shader, GetShaderLocation(skybox.materials[0].shader, "doGamma"), (int[1]){1}, SHADER_UNIFORM_INT);
-        SetShaderValue(skybox.materials[0].shader, GetShaderLocation(skybox.materials[0].shader, "vflipped"), (int[1]){1}, SHADER_UNIFORM_INT);
+        int OnePointer[] = {1};
+        int ZeroPointer[] = {0};
+        int CubeMapPointer[] = {MATERIAL_MAP_CUBEMAP};
+
+        SetShaderValue(skybox.materials[0].shader, GetShaderLocation(skybox.materials[0].shader, "environmentMap"),
+                       CubeMapPointer, SHADER_UNIFORM_INT);
+        SetShaderValue(skybox.materials[0].shader, GetShaderLocation(skybox.materials[0].shader, "doGamma"), OnePointer,
+                       SHADER_UNIFORM_INT);
+        SetShaderValue(skybox.materials[0].shader, GetShaderLocation(skybox.materials[0].shader, "vflipped"),
+                       OnePointer, SHADER_UNIFORM_INT);
 
         // Load cubemap shader and setup required shader locations
-        Shader shdrCubemap = LoadShader(TextFormat("../media/Shaders/cubemap.vs", 330),
-                                        TextFormat("../media/Shaders/cubemap.fs", 330));
+        Shader shdrCubemap =
+            LoadShader(TextFormat("../media/Shaders/cubemap.vs", 330), TextFormat("../media/Shaders/cubemap.fs", 330));
 
-        SetShaderValue(shdrCubemap, GetShaderLocation(shdrCubemap, "equirectangularMap"), (int[1]){0}, SHADER_UNIFORM_INT);
+        SetShaderValue(shdrCubemap, GetShaderLocation(shdrCubemap, "equirectangularMap"), ZeroPointer,
+                       SHADER_UNIFORM_INT);
         Texture2D panorama;
         panorama = LoadTexture("../media/Environment/nebula-n0.hdr");
         // Generate cubemap (texture with 6 quads-cube-mapping) from panorama HDR texture
         // NOTE 1: New texture is generated rendering to texture, shader calculates the sphere->cube coordinates mapping
         // NOTE 2: It seems on some Android devices WebGL, fbo does not properly support a FLOAT-based attachment,
-        // despite texture can be successfully created.. so using PIXELFORMAT_UNCOMPRESSED_R8G8B8A8 instead of PIXELFORMAT_UNCOMPRESSED_R32G32B32A32
-        skybox.materials[0].maps[MATERIAL_MAP_CUBEMAP].texture = GenTextureCubemap(shdrCubemap, panorama, 1024, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8);
+        // despite texture can be successfully created.. so using PIXELFORMAT_UNCOMPRESSED_R8G8B8A8 instead of
+        // PIXELFORMAT_UNCOMPRESSED_R32G32B32A32
+        skybox.materials[0].maps[MATERIAL_MAP_CUBEMAP].texture =
+            GenTextureCubemap(shdrCubemap, panorama, 1024, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8);
         // UnloadTexture(panorama);    // Texture not required anymore, cubemap already generated
         // ====================================================================
     }
@@ -105,7 +115,7 @@ class GraphicsSystem : public SystemBase
         auto camerasView = registry.view<CameraComponent, TransformComponent>();
         for (auto entity : camerasView)
         {
-            //std::cout << "Rendering Cam " << cameraCount++ << "\n";            
+            // std::cout << "Rendering Cam " << cameraCount++ << "\n";
             CameraComponent cam = camerasView.get<CameraComponent>(entity);
             auto &transform = camerasView.get<TransformComponent>(entity);
             camera.position = transform.Translation;
@@ -130,7 +140,6 @@ class GraphicsSystem : public SystemBase
             {
                 cam.Frustum->Extract();
             }
-            
 
             // ====================================================================
             // We are inside the cube, we need to disable backface culling!
@@ -167,7 +176,8 @@ class GraphicsSystem : public SystemBase
             {
                 EndTextureMode();
                 ClearBackground(BLACK);
-                DrawTexturePro(renderBuffers[0].texture, cam.Target.SourceRect, cam.Target.DestRect, cam.Target.Origin, cam.Target.Angle, cam.Target.Tint);
+                DrawTexturePro(renderBuffers[0].texture, cam.Target.SourceRect, cam.Target.DestRect, cam.Target.Origin,
+                               cam.Target.Angle, cam.Target.Tint);
             }
         }
 
@@ -277,9 +287,8 @@ class GraphicsSystem : public SystemBase
             // ALTERNATIVE: Try to use internal batch system to draw the cube instead of rlLoadDrawCube
             // for some reason this method does not work, maybe due to cube triangles definition? normals pointing out?
             // TODO: Investigate this issue...
-            // rlSetTexture(panorama.id); // WARNING: It must be called after enabling current framebuffer if using internal batch system!
-            // rlClearScreenBuffers();
-            // DrawCubeV(Vector3Zero(), Vector3One(), WHITE);
+            // rlSetTexture(panorama.id); // WARNING: It must be called after enabling current framebuffer if using
+            // internal batch system! rlClearScreenBuffers(); DrawCubeV(Vector3Zero(), Vector3One(), WHITE);
             // rlDrawRenderBatchActive();
         }
         //------------------------------------------------------------------------------------------

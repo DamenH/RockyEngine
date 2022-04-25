@@ -44,7 +44,7 @@ class AsteroidSystem : public SystemBase
     void OnStartup(entt::registry &registry) override
     {
         std::cout << "Generating scene\n";
-        uint32_t asteroidCount = 3000; // Number of asteroids
+        uint32_t asteroidCount = 4000; // Number of asteroids
 #ifndef NDEBUG
         asteroidCount = 500.0f; // Number of asteroids
 #endif
@@ -110,7 +110,7 @@ class AsteroidSystem : public SystemBase
                                           &cameraFrustum});
     }
 
-    inline float ManhattanDistance(Vector3 a, Vector3 b)
+    inline static float ManhattanDistance(Vector3 a, Vector3 b)
     {
         return abs(a.x - b.x) + abs(a.y - b.y) + abs(a.z - b.z);
     }
@@ -182,7 +182,7 @@ class AsteroidSystem : public SystemBase
                         impulse = Vector3Normalize(impulse);
                         impulse = Vector3Scale(
                             impulse,
-                            Vector3Length(Vector3Subtract(asteroid.Velocity, otherAsteroid.Velocity)) * 0.1f / d);
+                            Vector3Length(Vector3Subtract(asteroid.Velocity, otherAsteroid.Velocity)) * 0.5f / d);
 
                         asteroid.Velocity = Vector3Add(asteroid.Velocity,
                                                        impulse); // Velocity is gained from one body

@@ -13,6 +13,7 @@
 #include "Engine/Core/Components/CameraComponent.h"
 #include "Engine/Core/Components/InstanceBinComponent.h"
 #include "Engine/Core/Components/ModelComponent.h"
+#include "Engine/Core/Components/MusicComponent.h"
 #include "Engine/Core/Components/TranformComponent.h"
 #include "Engine/Core/Components/VisibilityComponent.h"
 #include "Engine/Core/SystemBase.h"
@@ -108,6 +109,9 @@ class AsteroidSystem : public SystemBase
                                           RenderTarget{Rectangle{0, 0, 1920, -1080}, Rectangle{0, 0, 1920, 1080},
                                                        Vector2{0, 0}, 0.0f, WHITE},
                                           &cameraFrustum});
+
+        auto musicEntity = registry.create();
+        registry.emplace<MusicComponent>(musicEntity, 5, true);
     }
 
     inline static float ManhattanDistance(Vector3 a, Vector3 b)

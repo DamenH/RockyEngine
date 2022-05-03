@@ -1,7 +1,9 @@
 #include "Application.h"
+#include "Game/Systems/AsteroidSystem.h"
+#include "Systems/AudioSystem.h"
+#include "Systems/GraphicsSystem.h"
 #include "Systems/InputSystem.h"
 #include "Systems/TransformSystem.h"
-#include "Systems/GraphicsSystem.h"
 #include "Systems/VisibilitySystem.h"
 
 #include "Game/Systems/AsteroidSystem.h"
@@ -12,55 +14,61 @@
 #include "Components/TranformComponent.h"
 #include "Engine/Utilities/Profiler.h"
 
-
 #include <entt/entt.hpp>
-#include <raylib.h>
 #include <iostream>
+#include <raylib.h>
 
-Application::Application() {
+Application::Application()
+{
 }
 
-void Application::setup() {
+void Application::setup()
+{
     std::cout << "Running Setup\n";
 
     std::cout << "Creating window and generating OpenGL context\n";
     SetConfigFlags(FLAG_MSAA_4X_HINT |
-                   //FLAG_VSYNC_HINT |
+                   // FLAG_VSYNC_HINT |
                    FLAG_WINDOW_RESIZABLE
-            // FLAG_FULLSCREEN_MODE
+                   // FLAG_FULLSCREEN_MODE
     );
     InitWindow(1920, 1080, "Rocky Engine");
+    InitAudioDevice();
     AssetManager::Load();
 
     // Create camera entity
-    //auto entity = registry.create();
-    //registry.emplace<CameraComponent>(entity);
-    //registry.emplace<TransformComponent>(entity, 0, 0, 25);
-
-
+    // auto entity = registry.create();
+    // registry.emplace<CameraComponent>(entity);
+    // registry.emplace<TransformComponent>(entity, 0, 0, 25);
 }
 
-void Application::RegisterSystem(SystemBase *system) {
+void Application::RegisterSystem(SystemBase *system)
+{
     systems[systemsIndex] = system;
     systemsIndex++;
 }
 
-void Application::InitializeSystems() {
+void Application::InitializeSystems()
+{
     std::cout << "Initializing Systems\n";
-    for (uint8_t i = 0; i < systemsIndex; i++) {
+    for (uint8_t i = 0; i < systemsIndex; i++)
+    {
         systems[i]->OnStartup(registry);
     }
 }
 
-void Application::UpdateSystems() {
+void Application::UpdateSystems()
+{
     auto timestamp = Profiler::Start("Frame", registry);
-    for (uint8_t i = 0; i < systemsIndex; i++) {
+    for (uint8_t i = 0; i < systemsIndex; i++)
+    {
         systems[i]->OnUpdate(registry);
     }
     Profiler::Stop(timestamp, registry);
 }
 
-void Application::Run() {
+void Application::Run()
+{
 
     std::cout << "Running\n";
 
@@ -70,6 +78,7 @@ void Application::Run() {
     TransformSystem transformSystem;
     GraphicsSystem graphicsSystem;
     VisibilitySystem visibilitySystem;
+    AudioSystem audioSystem;
     AsteroidSystem asteroidSystem;
 
     FreeCameraSystem freeCameraSystem;
@@ -77,9 +86,10 @@ void Application::Run() {
 
 
     RegisterSystem(&inputSystem);
-    RegisterSystem(&transformSystem);    
+    RegisterSystem(&transformSystem);
     RegisterSystem(&visibilitySystem);
     RegisterSystem(&graphicsSystem);
+    RegisterSystem(&audioSystem);
     RegisterSystem(&asteroidSystem);
 
     RegisterSystem(&freeCameraSystem);
@@ -88,11 +98,13 @@ void Application::Run() {
     InitializeSystems();
 
     std::cout << "Entering Main Loop\n";
-    while (!quit) {
+    while (!quit)
+    {
 
         UpdateSystems();
 
-        if (!quit) {
+        if (!quit)
+        {
             quit = WindowShouldClose();
         }
     }

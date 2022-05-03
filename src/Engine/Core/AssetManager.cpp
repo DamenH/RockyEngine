@@ -1,15 +1,16 @@
 #include "AssetManager.h"
-#include <raylib.h>
+#include "Systems/rlights.h"
 #include <iostream>
+#include <raylib.h>
+#include <raymath.h>
 #include <unistd.h>
 #include <unordered_map>
-#include <raymath.h>
-#include "Systems/rlights.h"
 
 static int NextId = 0;
 
 std::unordered_map<int, Mesh> Meshes;
 std::unordered_map<int, Material> Materials;
+std::unordered_map<int, Music> Musics;
 
 AssetManager::AssetManager()
 {
@@ -23,6 +24,11 @@ Mesh AssetManager::GetMesh(int Id)
 Material AssetManager::GetMaterial(int Id)
 {
     return Materials[Id];
+}
+
+Music AssetManager::GetMusic(int Id)
+{
+    return Musics[Id];
 }
 
 void AssetManager::Load()
@@ -56,6 +62,8 @@ void AssetManager::Load()
 
     LoadMaterial(material);
 
+    LoadMusic("../media/Audio/ambient-space.ogg");
+
     std::cout << "Done" << std::endl;
 }
 
@@ -70,6 +78,14 @@ int AssetManager::LoadMesh(char *path)
 int AssetManager::LoadMaterial(Material material)
 {
     Materials[NextId] = material;
+    NextId++;
+    return NextId - 1;
+}
+
+int AssetManager::LoadMusic(char *path)
+{
+    Music music = LoadMusicStream(path);
+    Musics[NextId] = music;
     NextId++;
     return NextId - 1;
 }

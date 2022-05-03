@@ -11,6 +11,16 @@
 #include "Engine/Utilities/Debug.h"
 #include "Engine/Utilities/Profiler.h"
 
+#include <glm/ext/matrix_clip_space.hpp>
+#include <glm/ext/matrix_transform.hpp>
+#include <glm/ext/scalar_constants.hpp>
+#include <glm/glm.hpp>
+#include <glm/gtx/euler_angles.hpp>
+#include <glm/gtx/quaternion.hpp>
+#include <glm/mat4x4.hpp>
+#include <glm/vec3.hpp>
+#include <glm/vec4.hpp>
+
 #include <entt/entt.hpp>
 #include <iostream>
 #include <raylib.h>
@@ -117,14 +127,11 @@ class GraphicsSystem : public SystemBase {
 
         camera.position = transform.Translation;
 
-        Vector3 target = {
-                cosf(transform.Rotation.y / 2),
-                sinf(transform.Rotation.x) + cosf(transform.Rotation.x),
-                sinf(transform.Rotation.y / 2)
-        };
+        glm::quat rotation = glm::quat(glm::vec3(transform.Rotation.x, transform.Rotation.y, transform.Rotation.z));
 
-        target = Vector3Normalize(target);
+        glm::vec3 target = rotation * glm::vec3(0.0f, 0.0f, 1.0f);
 
+        target = glm::normalize(target);
 
         camera.target = {
                 transform.Translation.x + target.x,

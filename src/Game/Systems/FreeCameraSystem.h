@@ -1,14 +1,14 @@
 #pragma once
 
-#include <glm/ext/matrix_clip_space.hpp> // glm::perspective
-#include <glm/ext/matrix_transform.hpp> // glm::translate, glm::rotate, glm::scale
-#include <glm/ext/scalar_constants.hpp> // glm::pi
+#include <glm/ext/matrix_clip_space.hpp>
+#include <glm/ext/matrix_transform.hpp>
+#include <glm/ext/scalar_constants.hpp>
 #include <glm/glm.hpp>
 #include <glm/gtx/euler_angles.hpp>
 #include <glm/gtx/quaternion.hpp>
-#include <glm/mat4x4.hpp> // glm::mat4
-#include <glm/vec3.hpp>   // glm::vec3
-#include <glm/vec4.hpp>   // glm::vec4
+#include <glm/mat4x4.hpp>
+#include <glm/vec3.hpp>
+#include <glm/vec4.hpp>
 
 #include "Engine/Core/Components/CameraComponent.h"
 #include "Engine/Core/Components/InputComponent.h"
@@ -94,11 +94,11 @@ class FreeCameraSystem : public SystemBase {
 
         auto const mouseSensitivity = 0.001f;
 
-//        rotation = rotation * glm::angleAxis(-input.MousePositionDelta.y * mouseSensitivity, glm::vec3(1.0f, 0.0f, 0.0f));
+        rotation = rotation * glm::angleAxis(input.MousePositionDelta.y * mouseSensitivity, glm::vec3(1.0f, 0.0f, 0.0f));
 
         auto euler = eulerAngles(rotation);
 
-        rotation = glm::quat(glm::vec3(euler.x, euler.y + input.MousePositionDelta.x * mouseSensitivity, euler.z));
+        rotation = glm::quat(glm::vec3(euler.x, euler.y + (input.MousePositionDelta.x * mouseSensitivity * -1), euler.z));
 
         euler = eulerAngles(rotation);
 

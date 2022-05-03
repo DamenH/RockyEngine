@@ -1,14 +1,17 @@
 #pragma once
 
-#include <cstdint>
-
 struct InputComponent {
     bool ForwardPressed;
     bool BackPressed;
     bool LeftPressed;
     bool RightPressed;
+    bool UpPressed;
+    bool DownPressed;
 
-    int32_t MouseDeltaX;
-    int32_t MouseDeltaY;
+    Vector2 MousePosition;
+    Vector2 PreviousMousePosition;
+    Vector2 MousePositionDelta;
+
+    float MouseWheelMove = 0;
 };
 

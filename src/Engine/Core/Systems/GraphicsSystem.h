@@ -25,8 +25,7 @@
 
 #define BUFFER_COUNT 8
 
-class GraphicsSystem : public SystemBase
-{
+class GraphicsSystem : public SystemBase {
     inline static Camera3D camera;
     inline static uint8_t FrameCount = 0;
     inline static int TriangleCount = 0;
@@ -41,21 +40,19 @@ class GraphicsSystem : public SystemBase
 
     inline static Model skybox;
 
-    void OnStartup(entt::registry &registry) override
-    {
+    void OnStartup(entt::registry &registry) override {
         // Camera struct initialization
         // TODO: Eliminate RayLib camera struct
         camera = {0};
-        camera.position = (Vector3){0.0f, 10.0f, 0.0f}; // Camera position
-        camera.target = (Vector3){0.0f, 0.0f, 0.0f};    // Camera looking at point
-        camera.up = (Vector3){0.0f, 1.0f, 0.0f};        // Camera up vector (rotation towards target)
+        camera.position = (Vector3) {0.0f, 10.0f, 0.0f}; // Camera position
+        camera.target = (Vector3) {0.0f, 0.0f, 0.0f};    // Camera looking at point
+        camera.up = (Vector3) {0.0f, 1.0f, 0.0f};        // Camera up vector (rotation towards target)
         camera.fovy = 60.0f;                            // Camera field-of-view Y
         camera.projection = CAMERA_PERSPECTIVE;         // Camera mode type
-        SetCameraMode(camera, CAMERA_FIRST_PERSON);     // Set a free camera mode
+        SetCameraMode(camera, CAMERA_CUSTOM);     // Set a free camera mode
 
         std::cout << "Generating render buffers\n";
-        for (int i = 0; i < BUFFER_COUNT; i++)
-        {
+        for (int i = 0; i < BUFFER_COUNT; i++) {
             RenderTexture2D t = LoadRenderTexture(1920, 1080);
             renderBuffers.push_back(t);
         }
@@ -72,7 +69,8 @@ class GraphicsSystem : public SystemBase
         Mesh cube = GenMeshCube(1.0f, 1.0f, 1.0f);
         skybox = LoadModelFromMesh(cube);
         skybox.materials[0].shader =
-            LoadShader(TextFormat("../media/Shaders/skybox.vs", 330), TextFormat("../media/Shaders/skybox.fs", 330));
+                LoadShader(TextFormat("../media/Shaders/skybox.vs", 330),
+                           TextFormat("../media/Shaders/skybox.fs", 330));
 
         int OnePointer[] = {1};
         int ZeroPointer[] = {0};
@@ -87,7 +85,8 @@ class GraphicsSystem : public SystemBase
 
         // Load cubemap shader and setup required shader locations
         Shader shdrCubemap =
-            LoadShader(TextFormat("../media/Shaders/cubemap.vs", 330), TextFormat("../media/Shaders/cubemap.fs", 330));
+                LoadShader(TextFormat("../media/Shaders/cubemap.vs", 330),
+                           TextFormat("../media/Shaders/cubemap.fs", 330));
 
         SetShaderValue(shdrCubemap, GetShaderLocation(shdrCubemap, "equirectangularMap"), ZeroPointer,
                        SHADER_UNIFORM_INT);
@@ -99,13 +98,12 @@ class GraphicsSystem : public SystemBase
         // despite texture can be successfully created.. so using PIXELFORMAT_UNCOMPRESSED_R8G8B8A8 instead of
         // PIXELFORMAT_UNCOMPRESSED_R32G32B32A32
         skybox.materials[0].maps[MATERIAL_MAP_CUBEMAP].texture =
-            GenTextureCubemap(shdrCubemap, panorama, 1024, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8);
+                GenTextureCubemap(shdrCubemap, panorama, 1024, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8);
         // UnloadTexture(panorama);    // Texture not required anymore, cubemap already generated
         // ====================================================================
     }
 
-    void OnUpdate(entt::registry &registry) override
-    {
+    void OnUpdate(entt::registry &registry) override {
         auto profTimeStamp = Profiler::Start("GraphicsSystem", registry);
         TriangleCount = 0;
         entityCount = 0;
@@ -113,94 +111,95 @@ class GraphicsSystem : public SystemBase
         cameraCount = 0;
 
         auto camerasView = registry.view<CameraComponent, TransformComponent>();
-        for (auto entity : camerasView)
-        {
-            // std::cout << "Rendering Cam " << cameraCount++ << "\n";
-            CameraComponent cam = camerasView.get<CameraComponent>(entity);
-            auto &transform = camerasView.get<TransformComponent>(entity);
-            camera.position = transform.Translation;
+        auto cameraEntity = camerasView.front();
+        auto &cam = camerasView.get<CameraComponent>(cameraEntity);
+        auto &transform = camerasView.get<TransformComponent>(cameraEntity);
 
-            BeginDrawing();
+        camera.position = transform.Translation;
 
-            if (RenderToTexture)
-            {
-                BeginTextureMode(renderBuffers[0]);
-                ClearBackground(BLANK);
+        Vector3 target = {
+                cosf(transform.Rotation.y / 2),
+                sinf(transform.Rotation.x) + cosf(transform.Rotation.x),
+                sinf(transform.Rotation.y / 2)
+        };
+
+        target = Vector3Normalize(target);
+
+
+        camera.target = {
+                transform.Translation.x + target.x,
+                transform.Translation.y + target.y,
+                transform.Translation.z + target.z
+        };
+
+        BeginDrawing();
+
+        if (RenderToTexture) {
+            BeginTextureMode(renderBuffers[0]);
+            ClearBackground(BLANK);
 #ifndef NDEBUG
-                DrawText("Buffer 0", 100, 200, 32, Color{0x00, 0xFF, 0xFF, 0x8F});
+            DrawText("Buffer 0", 100, 200, 32, Color{0x00, 0xFF, 0xFF, 0x8F});
 #endif
-            }
-            else
-            {
-                ClearBackground(BLACK);
-            }
+        } else {
+            ClearBackground(BLACK);
+        }
 
-            BeginMode3D(camera);
-            if (VisibilitySystem::UpdateFrustum)
-            {
-                cam.Frustum->Extract();
-            }
+        BeginMode3D(camera);
+        if (VisibilitySystem::UpdateFrustum) {
+            cam.Frustum->Extract();
+        }
 
-            // ====================================================================
-            // We are inside the cube, we need to disable backface culling!
-            rlDisableBackfaceCulling();
-            rlDisableDepthMask();
-            DrawModel(skybox, (Vector3){0, 0, 0}, 1.0f, WHITE);
-            rlEnableBackfaceCulling();
-            rlEnableDepthMask();
-            // ====================================================================
+        // ====================================================================
+        // We are inside the cube, we need to disable backface culling!
+        rlDisableBackfaceCulling();
+        rlDisableDepthMask();
+        DrawModel(skybox, (Vector3) {0, 0, 0}, 1.0f, WHITE);
+        rlEnableBackfaceCulling();
+        rlEnableDepthMask();
+        // ====================================================================
 
-            auto binsView = registry.view<InstanceBinComponent>();
-            for (auto entity : binsView)
-            {
-                InstanceBinComponent bin = binsView.get<InstanceBinComponent>(entity);
-                const Mesh mesh = AssetManager::GetMesh(bin.Mesh);
-                const Material material = AssetManager::GetMaterial(bin.Material);
-                const int count = bin.InstanceCount;
-                Matrix *array = bin.ModelTransforms.data();
+        auto binsView = registry.view<InstanceBinComponent>();
+        for (auto entity: binsView) {
+            InstanceBinComponent bin = binsView.get<InstanceBinComponent>(entity);
+            const Mesh mesh = AssetManager::GetMesh(bin.Mesh);
+            const Material material = AssetManager::GetMaterial(bin.Material);
+            const int count = bin.InstanceCount;
+            Matrix *array = bin.ModelTransforms.data();
 
-                DrawMeshInstanced(mesh, material, array, count);
-                TriangleCount += mesh.triangleCount * count;
-                entityCount += count;
-                if (count > 0)
-                {
-                    batchCount++;
-                }
-            }
-
-            DrawGrid(10, 1.0f);
-
-            EndMode3D();
-
-            if (RenderToTexture)
-            {
-                EndTextureMode();
-                ClearBackground(BLACK);
-                DrawTexturePro(renderBuffers[0].texture, cam.Target.SourceRect, cam.Target.DestRect, cam.Target.Origin,
-                               cam.Target.Angle, cam.Target.Tint);
+            DrawMeshInstanced(mesh, material, array, count);
+            TriangleCount += mesh.triangleCount * count;
+            entityCount += count;
+            if (count > 0) {
+                batchCount++;
             }
         }
 
-        if (IsKeyReleased(KEY_Q))
-        {
+        DrawGrid(10, 1.0f);
+
+        EndMode3D();
+
+        if (RenderToTexture) {
+            EndTextureMode();
+            ClearBackground(BLACK);
+            DrawTexturePro(renderBuffers[0].texture, cam.Target.SourceRect, cam.Target.DestRect, cam.Target.Origin,
+                           cam.Target.Angle, cam.Target.Tint);
+        }
+
+
+        if (IsKeyReleased(KEY_Q)) {
             DebugGuiActive = !DebugGuiActive;
-            if (DebugGuiActive)
-            {
+            if (DebugGuiActive) {
                 EnableCursor();
-            }
-            else
-            {
+            } else {
                 DisableCursor();
             }
         }
 
-        if (DebugGuiActive)
-        {
+        if (DebugGuiActive) {
             Debug::Draw();
         }
 
-        if (!DebugGuiActive || IsMouseButtonDown(MOUSE_BUTTON_RIGHT))
-        {
+        if (!DebugGuiActive || IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
             UpdateCamera(&camera);
         }
 
@@ -215,8 +214,7 @@ class GraphicsSystem : public SystemBase
         Profiler::Stop(profTimeStamp, registry);
     }
 
-    static void DebugGuiCallback()
-    {
+    static void DebugGuiCallback() {
         ImGui::Checkbox("Use Render Buffers", &RenderToTexture);
 
         ImGui::Text("Drawn Entities: %d", entityCount);
@@ -226,8 +224,7 @@ class GraphicsSystem : public SystemBase
     }
 
     // Generate cubemap texture from HDR texture
-    static TextureCubemap GenTextureCubemap(Shader shader, Texture2D panorama, int size, int format)
-    {
+    static TextureCubemap GenTextureCubemap(Shader shader, Texture2D panorama, int size, int format) {
         TextureCubemap cubemap = {0};
 
         rlDisableBackfaceCulling(); // Disable backface culling to render inside the cube
@@ -257,12 +254,15 @@ class GraphicsSystem : public SystemBase
 
         // Define view matrix for every side of the cubemap
         Matrix fboViews[6] = {
-            MatrixLookAt((Vector3){0.0f, 0.0f, 0.0f}, (Vector3){1.0f, 0.0f, 0.0f}, (Vector3){0.0f, -1.0f, 0.0f}),
-            MatrixLookAt((Vector3){0.0f, 0.0f, 0.0f}, (Vector3){-1.0f, 0.0f, 0.0f}, (Vector3){0.0f, -1.0f, 0.0f}),
-            MatrixLookAt((Vector3){0.0f, 0.0f, 0.0f}, (Vector3){0.0f, 1.0f, 0.0f}, (Vector3){0.0f, 0.0f, 1.0f}),
-            MatrixLookAt((Vector3){0.0f, 0.0f, 0.0f}, (Vector3){0.0f, -1.0f, 0.0f}, (Vector3){0.0f, 0.0f, -1.0f}),
-            MatrixLookAt((Vector3){0.0f, 0.0f, 0.0f}, (Vector3){0.0f, 0.0f, 1.0f}, (Vector3){0.0f, -1.0f, 0.0f}),
-            MatrixLookAt((Vector3){0.0f, 0.0f, 0.0f}, (Vector3){0.0f, 0.0f, -1.0f}, (Vector3){0.0f, -1.0f, 0.0f})};
+                MatrixLookAt((Vector3) {0.0f, 0.0f, 0.0f}, (Vector3) {1.0f, 0.0f, 0.0f}, (Vector3) {0.0f, -1.0f, 0.0f}),
+                MatrixLookAt((Vector3) {0.0f, 0.0f, 0.0f}, (Vector3) {-1.0f, 0.0f, 0.0f},
+                             (Vector3) {0.0f, -1.0f, 0.0f}),
+                MatrixLookAt((Vector3) {0.0f, 0.0f, 0.0f}, (Vector3) {0.0f, 1.0f, 0.0f}, (Vector3) {0.0f, 0.0f, 1.0f}),
+                MatrixLookAt((Vector3) {0.0f, 0.0f, 0.0f}, (Vector3) {0.0f, -1.0f, 0.0f},
+                             (Vector3) {0.0f, 0.0f, -1.0f}),
+                MatrixLookAt((Vector3) {0.0f, 0.0f, 0.0f}, (Vector3) {0.0f, 0.0f, 1.0f}, (Vector3) {0.0f, -1.0f, 0.0f}),
+                MatrixLookAt((Vector3) {0.0f, 0.0f, 0.0f}, (Vector3) {0.0f, 0.0f, -1.0f},
+                             (Vector3) {0.0f, -1.0f, 0.0f})};
 
         rlViewport(0, 0, size, size); // Set viewport to current fbo dimensions
 
@@ -270,8 +270,7 @@ class GraphicsSystem : public SystemBase
         rlActiveTextureSlot(0);
         rlEnableTexture(panorama.id);
 
-        for (int i = 0; i < 6; i++)
-        {
+        for (int i = 0; i < 6; i++) {
             // Set the view matrix for the current cube face
             rlSetUniformMatrix(shader.locs[SHADER_LOC_MATRIX_VIEW], fboViews[i]);
 

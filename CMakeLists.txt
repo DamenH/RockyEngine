@@ -38,6 +38,7 @@ target_include_directories(Game
         "${CMAKE_SOURCE_DIR}/third_party/entt/src"
         "${CMAKE_SOURCE_DIR}/third_party/rlImGui"
         "${CMAKE_SOURCE_DIR}/third_party/implot"
+        "${CMAKE_SOURCE_DIR}/third_party/glm"
         "${CMAKE_SOURCE_DIR}/src/Engine/Core/Systems/"
         "${CMAKE_SOURCE_DIR}/src")
 

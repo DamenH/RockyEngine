@@ -12,8 +12,7 @@ struct RenderTarget
 };
 
 struct CameraComponent {
-    float FoV;
-    Matrix ViewProjectionTransform;
+    float FoVy;             // Camera field-of-view apperture in Y (degrees) in perspective, used as near plane width in orthographic
     RenderTarget Target;
     RLFrustum* Frustum;
 };
